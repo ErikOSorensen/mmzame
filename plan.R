@@ -1,6 +1,6 @@
 source(here::here("packages.R"))
 source(here::here("functions.R"))
-NP_S = 10
+NP_S = 5
 SELFISH_REQUIREMENT = 0.05
 
 plan <- drake_plan(

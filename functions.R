@@ -142,3 +142,22 @@ prepare_hypothesis_data <- function(prop3, selfish_ids, prop4, symmetric_ids) {
   do.call(rbind,hyp)
 }
 
+bronars_datasets <- function(decisions_df, n_per_datasets, n_datasets, smallest_x=0) {
+  n_total <- n_per_datasets * n_datasets
+  source <- decisions_df %>% select(maxx, maxy)
+  all_budgets <- source %>% sample_n(n_total, replace=TRUE)
+  
+  all_budgets$x <- runif(n_total, min=smallest_x, max=1-smallest_x) * all_budgets$maxx
+  all_budgets$y <- all_budgets$maxy - all_budgets$x * (all_budgets$maxy/all_budgets$maxx)
+  all_budgets$px <- 1
+  all_budgets$py <- all_budgets$maxx / all_budgets$maxy
+  all_budgets <- all_budgets %>% select(px,py,x,y)
+  ab_list <- split(all_budgets, rep(1:n_datasets, each=n_per_datasets))
+  ab_list
+}
+
+ccei_on_bronars_budgets_df <- function(df) {
+  df_x <- df %>% select(x,y)
+  df_p <- df %>% select(px,py)
+  ccei(df_x, df_p)
+}

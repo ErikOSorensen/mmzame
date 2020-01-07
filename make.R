@@ -1,8 +1,3 @@
-library(future)
 source(here::here("plan.R"))
-future::plan(future::multiprocess)
-make( 
-  plan,
-  parallelism = "future",
-  jobs = 10
-)
+future::plan(future.callr::callr, workers = 10L)
+make(plan)

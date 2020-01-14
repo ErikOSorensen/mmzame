@@ -1,7 +1,8 @@
 source(here::here("packages.R"))
 source(here::here("functions.R"))
 
-NP_S = 5
+NP_S = 10
+N_STANDARD_BRONARS = 25
 SELFISH_REQUIREMENT = 0.05
 
 plan <- drake_plan(
@@ -45,6 +46,6 @@ plan <- drake_plan(
     summarize(mean_yshare = mean(yshare)) %>%
     filter( mean_yshare > (1.0 - SELFISH_REQUIREMENT) ),
   hypotheses_data = prepare_hypothesis_data(prop3, selfish, prop4, symmetric),
-  bronars_budgets = bronars_datasets(mmzame_decisions, 50, 25000),
+  bronars_budgets = bronars_datasets(mmzame_decisions, 50, N_STANDARD_BRONARS),
   pure_bronars = furrr::future_map_dbl(bronars_budgets, ccei_on_bronars_budgets_df)
 )

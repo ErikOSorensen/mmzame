@@ -1,0 +1,79 @@
+---
+title: "Testing rationality"
+author: "Erik Ø. Sørensen"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+source(here("packages.R"))
+source(here("functions.R")) 
+mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>% 
+  filter(treatment %in% c("moral", "risk", "dictator"))
+background = readRDS(here("data", "background.rds"))
+```
+
+We are interested in Afriat's cost efficiency index for each of the treatments.
+
+First, recoding to final treatment names, then calculating CCEI's for each 
+individual/treatment combination.
+```{r}
+mmzame_decisions <- mmzame_decisions %>% 
+  mutate(treatment = fct_recode(as_factor(treatment),
+                                "Social Choice" = "dictator",
+                                "Social Risk" = "moral",
+                                "Personal Risk" = "risk"))
+cceis <- c()
+domains <- c()
+ids <- c()
+for (i in unique(mmzame_decisions$id)) {
+  for (j in unique(mmzame_decisions$treatment)) {
+    x_df <- mmzame_decisions %>% filter(id==i, treatment==j) %>% select(x,y)
+    p_df <- mmzame_decisions %>% filter(id==i, treatment==j) %>% mutate(px=maxy/maxx, py = 1) %>% select(px,py)
+    ids <- c(ids, i)
+    cceis <- c(cceis, ccei(x_df,p_df))
+    domains <- c(domains, j)
+  }
+}
+ccei_df <- tibble(id=ids, 
+                  ccei=cceis, 
+                  domain=factor(domains))
+```
+
+Now, some descriptive statics on these CCEIs:
+```{r}
+ccei_df %>% group_by(domain) %>%
+  summarize( mean_ccei = mean(ccei),
+             above_90 = mean( ccei>0.9)) %>%
+  knitr::kable(digits=3)
+```
+
+I have pre-calculated the Bronars numbers, and summarize these:
+```{r}
+loadd("pure_bronars")
+bronars_df <- tibble(domain = "Bronars", ccei=pure_bronars)
+bronars_df %>% summarize(Bronars_mean_ccei = mean(ccei),
+                         Bronars_above_90 = mean( ccei>0.9)) %>%
+  knitr::kable(digits=3)
+```
+
+I append the Bronars data to the actual CCEIs and create a faceted histogram:
+
+```{r}
+ccei_df %>% mutate(domain = as.character(domain)) %>%
+  bind_rows(bronars_df) %>%
+  mutate(domain = factor(domain, levels=c("Social Choice", 
+                                          "Personal Risk", 
+                                          "Social Risk",
+                                          "Bronars"))) %>%
+  ggplot(aes(x=ccei, y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) + 
+  theme_bw() + 
+  labs(x="CCEI", y="Fraction",
+       caption="Afriat's Cost Efficiency Index (CCEI) for each of the three experimental\ntreatments and for 25 000 simulated draws of individuals with uniform random behavior. ") +
+  facet_wrap(.~domain) 
+ggsave(here("graphs", "empirical_cceis_and_Bronars.pdf"))
+```
+

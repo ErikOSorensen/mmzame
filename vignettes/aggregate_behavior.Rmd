@@ -1,0 +1,99 @@
+---
+title: "Data description: Aggregate behavior"
+author: "Erik Ø. Sørensen"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds"))
+background = readRDS(here("data", "background.rds"))
+```
+
+This is to calculate the descriptives in the subsection on aggregate behavior in 
+"Linking Social and Personal Preferences: Theory and Experiment" by William R. Zame, 
+Bertil Tungodden, Erik Ø. Sørensen, Shachar Kariv, and Alexander W. Cappelen. 
+
+Prepping of data is outlined in the drake file "plan.R". 
+
+# Distribution of choices in the *Social Choice* treatment
+
+Calculating the averages of $y/(x+y)$ in the social treatment, for all individuals,
+and 
+```{r}
+average_social_decisions <- mmzame_decisions %>% 
+  filter(treatment=="dictator") %>%
+  mutate(yshare = y/(y+x)) %>%
+  group_by(id) %>%
+  summarize(mean_yshare = mean(yshare)) %>%
+  mutate(selfish = (mean_yshare>0.95),
+         impartial = (abs(mean_yshare - 0.5)<0.05))
+```
+
+Now, we can count the different types:
+```{r}
+(type_table <- average_social_decisions %>% 
+  with(table(selfish,impartial)))
+type_table / sum(type_table)
+```
+
+How many were even more selfless? 
+```{r}
+average_social_decisions %>% filter(mean_yshare<0.45) %>%
+  arrange(mean_yshare)
+```
+
+Finally, we want a histogram of the mean share to the y-good:
+```{r}
+average_social_decisions %>% ggplot(aes(x=mean_yshare, y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram(binwidth=0.05, boundary=0) +
+  labs(x = "Mean y/(x+y)",
+       y = "Fraction",
+       caption ="Decisions in the Social Choice treatment.") +
+  theme_bw()
+ggsave(here::here("graphs", "aggregate_social_choice.pdf"))
+```
+# Distribution of choices in the *Personal Risk* and the *Social Risk* treatments
+
+In the personal risk and social risk treatments, it is not the average share
+to the y-axis that is of importance, but the average share to the cheapest asset.
+I also merge in the type classification based on social choices.
+
+I rename treatments for the graph creation
+
+```{r}
+average_symmetric_decisions <- mmzame_decisions %>% 
+  filter(treatment %in% c("moral", "risk")) %>%
+  mutate(share_cheapest = if_else(maxy>maxx, y/(y+x), x/(y+x))) %>%
+  group_by(treatment, id) %>%
+  summarize(mean_cheapest = mean(share_cheapest)) %>%
+  left_join(average_social_decisions, by="id") %>%
+  ungroup() %>%
+  mutate(treatmentf = fct_recode(factor(treatment, levels=c("risk","moral")),
+         "Personal Risk" = "risk",
+         "Social Risk" = "moral"))
+```
+
+Faceted histogram:
+```{r}
+average_symmetric_decisions %>% ggplot(aes(x=mean_cheapest, y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0.0) + 
+  labs(x = "Mean share of cheapest asset in portfolio",
+       y = "Fraction") +
+  theme_bw() + facet_grid(.~treatmentf)
+ggsave(here::here("graphs", "aggregate_risks.pdf"))
+```
+
+How may are in the extreme groups? 
+```{r}
+average_symmetric_decisions %>%
+  mutate(more_than_95p = (mean_cheapest > 0.95),
+         less_than_55p = (mean_cheapest < 0.55)) %>% 
+  group_by(treatmentf, more_than_95p, less_than_55p) %>%
+  summarize(n = n()) %>% knitr::kable()
+```
+

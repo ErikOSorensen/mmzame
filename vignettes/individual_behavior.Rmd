@@ -1,0 +1,120 @@
+---
+title: "Data description: Individual behavior"
+author: "Erik Ø. Sørensen"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+library(patchwork)
+mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>%
+  filter(treatment %in% c("moral", "risk", "dictator")) %>%
+  mutate(yshare = y/(y+x), 
+         cheapshare = if_else(maxy>=maxx, y/(y+x), x/(y+x))) 
+
+background = readRDS(here("data", "background.rds"))
+```
+
+
+Let's define selfish and symmetric as those that are within 5 percentage points of
+being completely selfish or completely symmetric on average. I also look at limits 0.1 and 0.025.
+
+```{r}
+SELFISH_SHARE <- 0.95
+SYMMETRIC_SHARE <- 0.05
+classifications <- mmzame_decisions %>% mutate(outcome=y/(y+x)) %>%
+  group_by(id, treatment) %>% 
+  summarize(mean_yshare = mean(outcome)) %>%
+  spread(treatment, mean_yshare) %>%
+  mutate(selfish = (dictator>=SELFISH_SHARE),
+         symmetric = abs(dictator - 0.5)<SYMMETRIC_SHARE,
+         selfish10 = (dictator>0.9),
+         symmetric10 = abs(dictator - 0.5)<0.1,
+         selfish025 = (dictator>0.975),
+         symmetric025 = abs(dictator - 0.5)<0.025) 
+classifications %>% ungroup %>% summarise_all(funs(mean)) %>%
+  dplyr::select(selfish:symmetric025) 
+classifications <- classifications %>%
+  dplyr::select(id, selfish, symmetric)
+```
+
+
+# Scatter graphs 
+
+```{r}
+ids <- unique(mmzame_decisions$id)
+captions <- list()
+selfishgraphs <- list()
+for (id in ids) {
+  if (classifications$selfish[classifications$id==id] == TRUE) {
+    caption <- "selfish"
+  } else if (classifications$symmetric[classifications$id==id]==TRUE) {
+    caption <- "impartial"
+  } else {
+    caption <- "neither"
+  }
+  captions[[id]] <- caption
+}
+scatterdata <- mmzame_decisions %>% 
+  mutate(logP = log(maxx/maxy),
+         treatment = fct_recode(as_factor(treatment),
+                                "Social Choice" = "dictator",
+                                "Social Risk" = "moral",
+                                "Personal Risk" = "risk"))
+for (id0 in ids) {
+  caption <- captions[[id0]]
+  if (caption == "selfish") {
+    fname <- paste0("logpricegraphs/selfish/yshare_logp_",id0,".pdf")
+    caption <- paste0("This individual, id=", id0,", is selfish.")
+    fname2 <- paste0("logpricegraphs/selfish/yshare_logp_selfish_implicit_",id0,".pdf")
+    sg <- scatterdata %>% filter(id==id0) %>%
+      filter(treatment!="Social Choice") %>%
+      ggplot(aes(x=logP, y=yshare, shape=treatment)) +
+      geom_point(size=2) + 
+      scale_shape_manual(values=c(1,3)) +
+      labs(x = "log(p)", 
+           y = "y/(x+y)",
+           caption = caption) +
+      theme_bw() + theme(legend.position = "bottom", 
+                         legend.justification = "center",
+                         legend.direction = "horizontal",
+                         legend.box = "horizontal")
+    selfishgraphs[[id0]] <- sg
+    print(sg)
+    ggsave(here("graphs", fname2), width=7,height=5)
+  } else if (caption == "impartial") {
+    fname <- paste0("logpricegraphs/impartial/yshare_logp_",id0,".pdf")
+    caption <- "This individual is impartial."
+  } else {
+    fname <- paste0("logpricegraphs/neither/yshare_logp_",id0,".pdf")
+    caption <- "This individual is neither selfish nor impartial."
+  }
+  scatterdata %>% filter(id==id0) %>%
+  ggplot(aes(x=logP, y=yshare, color=treatment)) + 
+    geom_point(position="jitter") +
+    labs(x = "log(p)",
+         y = "y/(x+y)",
+         caption = caption) +
+    theme_bw() + theme(legend.position = c(0.88,0.8))
+  ggsave(here("graphs", fname), width=7, height=5 )
+}
+```
+
+Now, we want to select 4 of these for a graph in the paper.
+
+```{r}
+p511 <- selfishgraphs[[511]] + theme(legend.position='none') + labs(x="log(p), id=511", caption="")
+p635 <- selfishgraphs[[635]] + theme(legend.position='none') + labs(x="log(p), id=635", caption="")
+p317 <- selfishgraphs[[317]] + theme(legend.position='none') + labs(x="log(p), id=317", caption="")
+p645 <- selfishgraphs[[645]] + theme(legend.position='none') + labs(x="log(p), id=645", caption="") 
+
+p511 + p635 + p317 + p645 +
+  plot_annotation(tag_levels = 'A') + theme(legend.position="bottom", legend.justification = "left")
+ggsave(here("graphs", "logprice_scatters.pdf"))
+```
+
+

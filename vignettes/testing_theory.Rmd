@@ -28,6 +28,7 @@ loadd("selfish")
 loadd("symmetric")
 ```
 
+# Testing proposition 3
 Creating all the graphs for testing proposition 3:
 ```{r}
 graph_list <- list()
@@ -48,12 +49,13 @@ for (x in p3_00) {
     labs(x = "CCEI", y = "Fraction", caption = caption)
   graph_list[[x$id]] <- g
   fname <- paste0("prop3_id_", x$id,".pdf")
-  ggsave(here("graphs", "prop3_tests", fname), plot = g, width=7, height = 5, units="in")
+  ggsave(here("graphs", "prop3_tests", fname), 
+         plot = g, width=7, height = 5, units="in")
 }
 ```
 
 Making a 4-panel version for the main paper. 
-```{r}
+```{r message=FALSE, warning=FALSE}
 p3A <- graph_list[[505]] + xlim(0.65,1)
 p3B <- graph_list[[729]] + xlim(0.65,1)
 p3C <- graph_list[[514]] + xlim(0.65,1)
@@ -64,5 +66,31 @@ ggsave(here("graphs","prop3_permutations.pdf"), plot=p3_joint,
        width=7, height = 5, units="in")
 ```
 
+# Testing proposition 4
+The same graphs for testing proposition 4 is available, but intended for an online appendix only.
+
+```{r}
+graph_list <- list()
+for (x in p4_00) {
+  if (!(x$id %in% symmetric$id))
+    next
+  df <- tibble(cceis=x$cceis_permuted)
+  caption <- paste0("Id=", x$id,". ")
+  caption <- paste0(caption, "p(min)=", format(x$p_min,  digits=3), ", p(max)=", 
+                    format(x$p_max, digits=3), ", combined p=", format(x$p_com, digits=3),".")
+  g <- df %>% 
+    ggplot(aes(x=cceis, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+    geom_histogram(binwidth = 0.01, boundary=0) + 
+    xlim(-0.01,1.01) + 
+    geom_vline(xintercept = x$ccei1) +
+    geom_vline(xintercept = x$ccei2) + 
+    theme_bw() +
+    labs(x = "CCEI", y = "Fraction", caption = caption)
+  graph_list[[x$id]] <- g
+  fname <- paste0("prop4_id_", x$id,".pdf")
+  ggsave(here("graphs", "prop4_tests", fname), 
+         plot = g, width=7, height = 5, units="in")
+}
+```
 
 

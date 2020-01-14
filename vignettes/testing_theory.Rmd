@@ -1,0 +1,68 @@
+---
+title: "Testing the Theory"
+author: "Erik Ø. Sørensen"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+source(here("packages.R"))
+source(here("functions.R")) 
+mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>% 
+  filter(treatment %in% c("moral", "risk", "dictator"))
+background = readRDS(here("data", "background.rds"))
+```
+
+This is to present the tests on individual behavior in 
+**"Linking Social and Personal Preferences: Theory and Experiment"** by William R. Zame, 
+Bertil Tungodden, Erik Ø. Sørensen, Shachar Kariv, and Alexander W. Cappelen. 
+
+Prepping of data and pre-calculation of test statistics is outlined in the drake file "plan.R". 
+
+```{r}
+loadd("p3_00")
+loadd("p4_00")
+loadd("selfish")
+loadd("symmetric")
+```
+
+Creating all the graphs for testing proposition 3:
+```{r}
+graph_list <- list()
+for (x in p3_00) {
+  if (!(x$id %in% selfish$id))
+    next
+  df <- tibble(cceis=x$cceis_permuted)
+  caption <- paste0("Id=", x$id,". ")
+  caption <- paste0(caption, "p(min)=", format(x$p_min,  digits=3), ", p(max)=", 
+                    format(x$p_max, digits=3), ", combined p=", format(x$p_com, digits=3),".")
+  g <- df %>% 
+    ggplot(aes(x=cceis, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+    geom_histogram(binwidth = 0.01, boundary=0) + 
+    xlim(-0.01,1.01) + 
+    geom_vline(xintercept = x$ccei1) +
+    geom_vline(xintercept = x$ccei2) + 
+    theme_bw() +
+    labs(x = "CCEI", y = "Fraction", caption = caption)
+  graph_list[[x$id]] <- g
+  fname <- paste0("prop3_id_", x$id,".pdf")
+  ggsave(here("graphs", "prop3_tests", fname), plot = g, width=7, height = 5, units="in")
+}
+```
+
+Making a 4-panel version for the main paper. 
+```{r}
+p3A <- graph_list[[505]] + xlim(0.65,1)
+p3B <- graph_list[[729]] + xlim(0.65,1)
+p3C <- graph_list[[514]] + xlim(0.65,1)
+p3D <- graph_list[[502]] + xlim(0.65,1)
+p3_joint <- p3A + p3B + p3C + p3D + plot_annotation(tag_levels = 'A') 
+p3_joint
+ggsave(here("graphs","prop3_permutations.pdf"), plot=p3_joint, 
+       width=7, height = 5, units="in")
+```
+
+
+

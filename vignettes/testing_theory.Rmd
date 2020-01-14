@@ -23,7 +23,15 @@ Prepping of data and pre-calculation of test statistics is outlined in the drake
 
 ```{r}
 loadd("p3_00")
+loadd("p3_05")
+loadd("p3_10")
+loadd("p3_15")
+loadd("p3_20")
 loadd("p4_00")
+loadd("p4_05")
+loadd("p4_10")
+loadd("p4_15")
+loadd("p4_20")
 loadd("selfish")
 loadd("symmetric")
 ```
@@ -93,4 +101,58 @@ for (x in p4_00) {
 }
 ```
 
+# Creating graph with final p-values
+
+We want plots of p-values for the two propositions in the paper. 
+Histograms of p-values from all the permutation tests from the relevant
+tests.
+```{r}
+prop3_ps <- map_dbl( keep(p3_00, function(x) (x$id %in% selfish$id)),
+                     function(x) x$p_com)
+prop3_df <- tibble(p=prop3_ps)
+prop4_ps <- map_dbl( keep(p4_00, function(x) (x$id %in% symmetric$id)),
+                     function(x) x$p_com)
+prop4_df <- tibble(p=prop4_ps)
+prop3_h <- prop3_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_bw() + 
+  labs(x = "p-value",
+       y = "Fraction",
+       caption="Tests of Proposition 3 on the selfish individuals.")
+prop4_h <- prop4_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_bw() + 
+  labs(x = "p-value",
+       y = "Fraction",
+       caption="Tests of Proposition 4 on the impartial individuals.")
+propositions <- prop3_h + prop4_h + plot_annotation(tag_levels = 'A')
+propositions
+ggsave(here("graphs", "test_of_propositions.pdf"), plot=propositions, 
+       width=7, height = 5, units="in")
+```
+
+# Creating graph to showcase the power of the experiment.
+
+We want to joint all the data to from the simulations
+```{r}
+p3s <- c(p3_00, p3_05, p3_10, p3_15, p3_20) %>%
+  keep(function(x) x$id %in% selfish$id) %>%
+  map_df(function(x) tibble(p_bronars=x$p_Bronars, p_prop=x$p_com, prop="Proposition 3")) %>%
+  bind_rows()
+p4s <- c(p4_00, p4_05, p4_10, p4_15, p4_20) %>%
+  keep(function(x) x$id %in% symmetric$id) %>%
+  map_df(function(x) tibble(p_bronars=x$p_Bronars, p_prop=x$p_com, prop="Proposition 4")) %>%
+  bind_rows()
+p3s %>% bind_rows(p4s) %>% 
+  ggplot(aes(x=p_prop, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_bw() +
+  facet_grid(prop ~ p_bronars) +
+  labs(x = "p-value",
+    caption="Distribution of p-values for main propositions under different probabability of random (Bronars) choices.\nHistogram bars are 0.05 wide.",
+       y = "Fraction") +
+  scale_x_continuous(breaks=c(0,0.5,1))
+ggsave(here("graphs", "power_analysis.pdf"), width=7, height=5, units="in")
+
+```
 

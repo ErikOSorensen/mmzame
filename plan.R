@@ -5,6 +5,9 @@ NP_S = 100
 N_STANDARD_BRONARS = 100
 SELFISH_REQUIREMENT = 0.05
 
+# To override the NP_S and N_STANDARD_BRONARS vars on computation server:
+try(source("params.local")) 
+
 mmzame_plan <- drake_plan(
   mmzame_decisions = readRDS(file_in(here("data/mmzame_decisions.rds"))),
   background = readRDS( file_in(here("data/background.rds"))),

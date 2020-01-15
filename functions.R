@@ -69,7 +69,7 @@ simulated_bronars <- function(x, p, respect_FOSD=FALSE) {
   data.frame(x=sx, y=sy)    # The prices do not change.
 }
 
-p_permutations_bronars <- function(decisions_individual, ns, np = 100000, p_Bronars=0, rFOSD=FALSE) {
+p_permutations_bronars <- function(decisions_individual, np = 10000, p_Bronars=0, rFOSD=FALSE) {
   # Arranged with n budget sets (sorted same way) for each of the two treatments being tested.
   id <- decisions_individual$id[1]
   n <- nrow(decisions_individual)/2
@@ -92,7 +92,7 @@ p_permutations_bronars <- function(decisions_individual, ns, np = 100000, p_Bron
     cceis[i] <- ccei(xtest, pactual)
   }
   ps <- ccei_p_value(ccei1, ccei2, cceis)
-  list(id=id, treatments=ns, ccei1=ccei1, ccei2=ccei2, cceis_permuted=cceis, 
+  list(id=id, ccei1=ccei1, ccei2=ccei2, cceis_permuted=cceis, 
        p_min=ps[1], p_max=ps[2], p_com=min(min(ps)*2, 1),
        p_Bronars=p_Bronars)
 }

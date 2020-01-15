@@ -7,9 +7,9 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(here)
-source(here("packages.R"))
-source(here("functions.R")) 
+#library(here)
+#source(here("packages.R"))
+#source(here("functions.R")) 
 mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>% 
   filter(treatment %in% c("moral", "risk", "dictator"))
 background = readRDS(here("data", "background.rds"))

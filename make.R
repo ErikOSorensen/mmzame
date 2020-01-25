@@ -1,3 +1,4 @@
 source(here::here("plan.R"))
-future::plan(future.callr::callr, workers = 10L)
-make(plan)
+future::plan(multiprocess)
+getwd()
+make(mmzame_plan, parallelism = "future", jobs = 10)

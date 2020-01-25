@@ -9,8 +9,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(here)
-library(tidyverse)
+#library(here)
+#library(tidyverse)
 mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds"))
 background = readRDS(here("data", "background.rds"))
 ```

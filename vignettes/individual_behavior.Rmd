@@ -9,8 +9,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(here)
-source(here("packages.R"))
+#library(here)
+#source(here("packages.R"))
 mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>%
   filter(treatment %in% c("moral", "risk", "dictator")) %>%
   mutate(yshare = y/(y+x), 

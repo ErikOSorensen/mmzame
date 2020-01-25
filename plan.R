@@ -1,8 +1,8 @@
 source("packages.R")
 source("functions.R")
 
-NP_S = 100
-N_STANDARD_BRONARS = 100
+NP_S = 10000
+N_STANDARD_BRONARS = 25000
 SELFISH_REQUIREMENT = 0.05
 
 # To override the NP_S and N_STANDARD_BRONARS vars on computation server:

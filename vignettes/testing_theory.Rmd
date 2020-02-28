@@ -150,7 +150,6 @@ p3s %>% bind_rows(p4s) %>%
   theme_bw() +
   facet_grid(prop ~ p_bronars) +
   labs(x = "p-value",
-    caption="Distribution of p-values for main propositions under different probabability of random (Bronars) choices.\nHistogram bars are 0.05 wide.",
        y = "Fraction") +
   scale_x_continuous(breaks=c(0,0.5,1))
 ggsave(here("graphs", "power_analysis.pdf"), width=7, height=5, units="in")

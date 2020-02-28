@@ -72,8 +72,7 @@ ccei_df %>% mutate(domain = as.character(domain)) %>%
   ggplot(aes(x=ccei, y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) + 
   theme_bw() + 
-  labs(x="CCEI", y="Fraction",
-       caption="Afriat's Cost Efficiency Index (CCEI) for each of the three experimental\ntreatments and for 25 000 simulated draws of individuals with uniform random behavior. ") +
+  labs(x="CCEI", y="Fraction") +
   facet_wrap(.~domain) 
 ggsave(here("graphs", "empirical_cceis_and_Bronars.pdf"))
 ```

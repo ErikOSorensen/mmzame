@@ -8,21 +8,24 @@ html_document:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#library(here)
-#source(here("packages.R"))
-#source(here("functions.R")) 
+#source(here::here("packages.R"))
+#source(here::here("functions.R"))
+font_add_google("Roboto","Roboto")
+showtext_auto()
 mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>% 
   filter(treatment %in% c("moral", "risk", "dictator"))
 background = readRDS(here("data", "background.rds"))
 ```
 
+
+# CCEI for the empirical data
 We are interested in Afriat's cost efficiency index for each of the treatments.
 
 First, recoding to final treatment names, then calculating CCEI's for each 
 individual/treatment combination.
 ```{r}
 mmzame_decisions <- mmzame_decisions %>% 
-  mutate(treatment = fct_recode(as_factor(treatment),
+  mutate(treatment = fct_recode(factor(treatment, levels=c("dictator","risk","moral")),
                                 "Social Choice" = "dictator",
                                 "Social Risk" = "moral",
                                 "Personal Risk" = "risk"))
@@ -40,7 +43,7 @@ for (i in unique(mmzame_decisions$id)) {
 }
 ccei_df <- tibble(id=ids, 
                   ccei=cceis, 
-                  domain=factor(domains))
+                  domain=factor(domains, levels=c("Social Choice", "Personal Risk","Social Risk")))
 ```
 
 Now, some descriptive statics on these CCEIs:
@@ -50,6 +53,39 @@ ccei_df %>% group_by(domain) %>%
              above_90 = mean( ccei>0.9)) %>%
   knitr::kable(digits=3)
 ```
+
+## CCEI - distribution by domain
+Now we want to cut the CCEIs into groups and plot grouped bar charts
+to show the distribution.
+
+```{r}
+ccei_bar_data <- ccei_df %>% mutate(ccei_group = cut_width(ccei, 0.10, boundary=1, closed="right"))
+ccei_bar_fractions <- ccei_bar_data %>%
+  group_by(domain, ccei_group) %>% 
+  tally() %>%  
+  ungroup() %>%
+  complete(domain,ccei_group, fill=list(n=0)) %>%
+  group_by(domain) %>%
+  mutate( fraction = n/sum(n))
+```
+
+
+```{r}
+ccei_bar_fractions %>% ggplot(aes(x=ccei_group, y=fraction, group=domain, fill=domain)) + 
+  geom_bar(stat="identity", position=position_dodge2()) +
+  labs(x = "Afriat's CCEI",
+       y = "Fraction") +
+  theme_minimal() + 
+  theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
+  scale_fill_grey()
+ggsave(here::here("graphs","empirical_cceis.pdf"))
+embed_fonts(here::here("graphs","empirical_cceis.pdf"))
+```
+
+
+
+
+# Bronars data output
 
 I have pre-calculated the Bronars numbers, and summarize these:
 ```{r}
@@ -63,17 +99,37 @@ bronars_df %>% summarize(Bronars_mean_ccei = mean(ccei),
 I append the Bronars data to the actual CCEIs and create a faceted histogram:
 
 ```{r}
-ccei_df %>% mutate(domain = as.character(domain)) %>%
+df <- ccei_df %>% mutate(domain = as.character(domain)) %>%
+  group_by(id) %>% 
+  summarize(min_ccei = min(ccei), 
+            max_ccei = max(ccei)) %>%
+  pivot_longer(min_ccei:max_ccei, names_to = "domain", values_to = "ccei") %>%
   bind_rows(bronars_df) %>%
-  mutate(domain = factor(domain, levels=c("Social Choice", 
-                                          "Personal Risk", 
-                                          "Social Risk",
-                                          "Bronars"))) %>%
-  ggplot(aes(x=ccei, y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
-  geom_histogram(binwidth=0.05, boundary=0) + 
-  theme_bw() + 
-  labs(x="CCEI", y="Fraction") +
-  facet_wrap(.~domain) 
+  mutate(outcome = fct_recode( factor(domain, levels=c("min_ccei", 
+                                          "max_ccei", 
+                                          "Bronars")),
+                               "Empirical minimum" = "min_ccei",
+                               "Empirical maximum" = "max_ccei",
+                               "Simulated (Bronars)" = "Bronars")) %>%
+  mutate(ccei_group = cut_width(ccei, 0.10, boundary=1, closed="right")) %>%
+  group_by(outcome, ccei_group) %>% 
+  tally() %>%  
+  ungroup() %>%
+  complete(outcome, ccei_group, fill=list(n=0)) %>%
+  group_by(outcome) %>%
+  mutate( fraction = n/sum(n))
+``` 
+
+Having calculated the numbers to be shown, what remains is to plot the bar chart:
+```{r}
+df %>% ggplot(aes(x=ccei_group, y=fraction, group=outcome, fill=outcome)) +
+  geom_bar(stat = "identity", position=position_dodge2()) +
+  labs(x = "Afriat's CCEI",
+       y = "Fraction") +
+  theme_minimal() + 
+  theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
+  scale_fill_grey()
 ggsave(here("graphs", "empirical_cceis_and_Bronars.pdf"))
+embed_fonts(here("graphs", "empirical_cceis_and_Bronars.pdf"))
 ```
 

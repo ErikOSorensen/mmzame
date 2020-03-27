@@ -8,9 +8,10 @@ html_document:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#library(here)
-#source(here("packages.R"))
-#source(here("functions.R")) 
+#source(here::here("packages.R"))
+#source(here::here("functions.R"))
+font_add_google("Roboto","Roboto")
+showtext_auto()
 mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>% 
   filter(treatment %in% c("moral", "risk", "dictator"))
 background = readRDS(here("data", "background.rds"))
@@ -41,25 +42,32 @@ loadd("symmetric")
 Creating all the graphs for testing proposition 3:
 ```{r}
 graph_list <- list()
+obs_list3 <- list()
 for (x in p3_00) {
   if (!(x$id %in% selfish$id))
     next
-  df <- tibble(cceis=x$cceis_permuted)
+  df3 <- tibble(cceis=x$cceis_permuted)
+  obs_list3[[x$id]] <- tibble(id = x$id,
+                              p_min = x$p_min,
+                              p_max = x$p_max,
+                              p_com = x$p_com)
   caption <- paste0("Id=", x$id,". ")
   caption <- paste0(caption, "p(min)=", format(x$p_min,  digits=3), ", p(max)=", 
                     format(x$p_max, digits=3), ", combined p=", format(x$p_com, digits=3),".")
-  g <- df %>% 
+  g <- df3 %>% 
     ggplot(aes(x=cceis, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
     geom_histogram(binwidth = 0.01, boundary=0) + 
     xlim(-0.01,1.01) + 
     geom_vline(xintercept = x$ccei1) +
     geom_vline(xintercept = x$ccei2) + 
-    theme_bw() +
-    labs(x = "CCEI", y = "Fraction", caption = caption)
+    theme_minimal() +
+    theme(text=element_text(family="Roboto")) + 
+    labs(x = "Afriat's CCEI", y = "Fraction", caption = caption)
   graph_list[[x$id]] <- g
   fname <- paste0("prop3_id_", x$id,".pdf")
   ggsave(here("graphs", "prop3_tests", fname), 
          plot = g, width=7, height = 5, units="in")
+  embed_fonts(here::here("graphs", "prop3_tests",fname))
 }
 ```
 
@@ -73,6 +81,20 @@ p3_joint <- p3A + p3B + p3C + p3D + plot_annotation(tag_levels = 'A')
 p3_joint
 ggsave(here("graphs","prop3_permutations.pdf"), plot=p3_joint, 
        width=7, height = 5, units="in")
+embed_fonts(here::here("graphs","prop3_permutations.pdf"))
+```
+
+What are the numbers?
+
+
+```{r}
+prop3 <- bind_rows( obs_list3)
+prop3 %>% mutate(sign10 = p_com<0.1,
+                 sign05 = p_com<0.05,
+                 sign01 = p_com<0.01) %>%
+  summarize(n_sign10 = sum(sign10),
+            n_sign05 = sum(sign05),
+            n_sign01 = sum(sign01))
 ```
 
 # Testing proposition 4
@@ -80,10 +102,15 @@ The same graphs for testing proposition 4 is available, but intended for an onli
 
 ```{r}
 graph_list <- list()
+obs_list4 <- list()
 for (x in p4_00) {
   if (!(x$id %in% symmetric$id))
     next
   df <- tibble(cceis=x$cceis_permuted)
+  obs_list4[[x$id]] <- tibble(id = x$id,
+                              p_min = x$p_min,
+                              p_max = x$p_max,
+                              p_com = x$p_com)
   caption <- paste0("Id=", x$id,". ")
   caption <- paste0(caption, "p(min)=", format(x$p_min,  digits=3), ", p(max)=", 
                     format(x$p_max, digits=3), ", combined p=", format(x$p_com, digits=3),".")
@@ -93,13 +120,28 @@ for (x in p4_00) {
     xlim(-0.01,1.01) + 
     geom_vline(xintercept = x$ccei1) +
     geom_vline(xintercept = x$ccei2) + 
-    theme_bw() +
-    labs(x = "CCEI", y = "Fraction", caption = caption)
+    theme_minimal() +
+    theme(text=element_text(family="Roboto")) + 
+    labs(x = "Afriat's CCEI", y = "Fraction", caption = caption)
   graph_list[[x$id]] <- g
   fname <- paste0("prop4_id_", x$id,".pdf")
   ggsave(here("graphs", "prop4_tests", fname), 
          plot = g, width=7, height = 5, units="in")
+  embed_fonts(here::here("graphs","prop4_tests", fname))
 }
+```
+
+What are the numbers?
+
+
+```{r}
+prop4 <- bind_rows( obs_list4)
+prop4 %>% mutate(sign10 = p_com<0.1,
+                 sign05 = p_com<0.05,
+                 sign01 = p_com<0.01) %>%
+  summarize(n_sign10 = sum(sign10),
+            n_sign05 = sum(sign05),
+            n_sign01 = sum(sign01))
 ```
 
 # Creating graph with final p-values
@@ -116,13 +158,15 @@ prop4_ps <- map_dbl( keep(p4_00, function(x) (x$id %in% symmetric$id)),
 prop4_df <- tibble(p=prop4_ps)
 prop3_h <- prop3_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
-  theme_bw() + 
+  theme_minimal() +
+  theme(text=element_text(family="Roboto")) + 
   labs(x = "p-value",
        y = "Fraction",
        caption="Tests of Proposition 3 on the selfish individuals.")
 prop4_h <- prop4_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
-  theme_bw() + 
+  theme_minimal() +
+  theme(text=element_text(family="Roboto")) + 
   labs(x = "p-value",
        y = "Fraction",
        caption="Tests of Proposition 4 on the impartial individuals.")
@@ -130,7 +174,12 @@ propositions <- prop3_h + prop4_h + plot_annotation(tag_levels = 'A')
 propositions
 ggsave(here("graphs", "test_of_propositions.pdf"), plot=propositions, 
        width=7, height = 5, units="in")
+embed_fonts(here::here("graphs","test_of_propositions.pdf"))
 ```
+
+
+## Now for a table variant
+For the table, we don't distinguish between the two propositions.
 
 # Creating graph to showcase the power of the experiment.
 
@@ -147,12 +196,34 @@ p4s <- c(p4_00, p4_05, p4_10, p4_15, p4_20) %>%
 p3s %>% bind_rows(p4s) %>% 
   ggplot(aes(x=p_prop, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +
-  theme_bw() +
+  theme_minimal() +
+  theme(text=element_text(family="Roboto")) +
   facet_grid(prop ~ p_bronars) +
   labs(x = "p-value",
        y = "Fraction") +
   scale_x_continuous(breaks=c(0,0.5,1))
 ggsave(here("graphs", "power_analysis.pdf"), width=7, height=5, units="in")
-
+embed_fonts(here::here("graphs", "power_analysis.pdf"))
 ```
+
+## Now for a Table variant
+We want a table variant (for now, only proposition 3):
+```{r}
+power_df <- p3s # %>% bind_rows(p4s)
+power <- power_df %>%  mutate(significant_01 = (p_prop<0.01),
+                              significant_05 = (p_prop<0.05),
+                              significant_10 = (p_prop<0.10)) %>%
+  pivot_longer(starts_with("significant_"), names_to="significance_level", 
+               values_to = "significance") %>%
+  group_by(p_bronars, significance_level) %>%
+  summarize(significant_fraction = mean(significance)) %>%
+  ungroup() %>%
+  pivot_wider(names_from=p_bronars, names_prefix="mu=", 
+              values_from=significant_fraction)
+power %>% knitr::kable(digits=3)
+```
+
+
+
+
 

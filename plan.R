@@ -5,9 +5,6 @@ NP_S = 10000
 N_STANDARD_BRONARS = 100000
 SELFISH_REQUIREMENT = 0.05
 
-# To override the NP_S and N_STANDARD_BRONARS vars on computation server:
-try(source("params.local")) 
-
 mmzame_plan <- drake_plan(
   mmzame_decisions = readRDS(file_in(here("data/mmzame_decisions.rds"))),
   background = readRDS( file_in(here("data/background.rds"))),
@@ -51,7 +48,7 @@ mmzame_plan <- drake_plan(
     quiet = TRUE),
   Ctesting_rationality = rmarkdown::render(
     knitr_in("vignettes/testing_rationality.Rmd"),
-    output_file = file_out("testing_rationality.html"),
+    output_file = file_out("testing_rationality.html" ),
     quiet = TRUE),
   Dtesting_theory = rmarkdown::render(
     knitr_in("vignettes/testing_theory.Rmd"),

@@ -74,21 +74,13 @@ for (x in p3_00) {
 Making a 4-panel version for the main paper. 
 ```{r message=FALSE, warning=FALSE}
 p3A <- graph_list[[505]] + xlim(0.65,1) + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="CCEI", y="Fraction of permutations")
 p3B <- graph_list[[729]] + xlim(0.65,1) + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="CCEI", y="Fraction of permutations")
 p3C <- graph_list[[514]] + xlim(0.65,1) + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="CCEI", y="Fraction of permutations")
 p3D <- graph_list[[502]] + xlim(0.65,1) + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="CCEI", y="Fraction of permutations")
 p3_joint <- p3A + p3B + p3C + p3D + plot_annotation(tag_levels = 'A') 
 p3_joint
 ggsave(here("graphs","prop3_permutations.pdf"), plot=p3_joint, 

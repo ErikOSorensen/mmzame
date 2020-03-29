@@ -111,21 +111,13 @@ Now, we want to select 4 of these for a graph in the paper.
 
 ```{r}
 p511 <- selfishgraphs[[511]] + theme(legend.position='none') + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="log price ratio", y="Token share")
 p635 <- selfishgraphs[[635]] + theme(legend.position='none') + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="log price ratio", y="Token share")
 p317 <- selfishgraphs[[317]] + theme(legend.position='none') + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="log price ratio", y="Token share")
 p645 <- selfishgraphs[[645]] + theme(legend.position='none') + 
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank(),
-        plot.caption=element_blank())
+  theme(plot.caption=element_blank()) + labs(x="log price ratio", y="Token share")
 
 p511 + p635 + p317 + p645 +
   plot_annotation(tag_levels = 'A') + theme(legend.position="none")

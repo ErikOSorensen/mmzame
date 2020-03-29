@@ -73,8 +73,8 @@ ccei_bar_fractions <- ccei_bar_data %>%
 ```{r}
 ccei_bar_fractions %>% ggplot(aes(x=ccei_group, y=fraction, group=domain, fill=domain)) + 
   geom_bar(stat="identity", position=position_dodge2()) +
-  labs(x = "Afriat's CCEI",
-       y = "Fraction") +
+  labs(x = "CCEI",
+       y = "Fraction of subjects") +
   theme_minimal() + 
   theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
   scale_fill_grey()
@@ -124,8 +124,8 @@ Having calculated the numbers to be shown, what remains is to plot the bar chart
 ```{r}
 df %>% ggplot(aes(x=ccei_group, y=fraction, group=outcome, fill=outcome)) +
   geom_bar(stat = "identity", position=position_dodge2()) +
-  labs(x = "Afriat's CCEI",
-       y = "Fraction") +
+  labs(x = "CCEI",
+       y = "Fraction of subjects") +
   theme_minimal() + 
   theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
   scale_fill_grey()

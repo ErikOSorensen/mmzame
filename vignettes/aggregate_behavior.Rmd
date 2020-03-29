@@ -144,8 +144,8 @@ font_add_google("Roboto","Roboto")
 showtext_auto()
 bar_fractions %>% ggplot(aes(x=ygroup, y=fraction, group=treatmentf, fill=treatmentf)) + 
   geom_bar(stat="identity", position=position_dodge2()) +
-  labs(x = "Share to self\u2014or to the cheapest asset",
-       y = "Fraction") +
+  labs(x = "Token share",
+       y = "Fraction of subjects") +
   theme_minimal() + 
   theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
   scale_fill_grey()

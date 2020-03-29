@@ -66,21 +66,33 @@ for (x in p3_00) {
   graph_list[[x$id]] <- g
   fname <- paste0("prop3_id_", x$id,".pdf")
   ggsave(here("graphs", "prop3_tests", fname), 
-         plot = g, width=7, height = 5, units="in")
+         plot = g, width=7.29, height = 4.5, units="in")
   embed_fonts(here::here("graphs", "prop3_tests",fname))
 }
 ```
 
 Making a 4-panel version for the main paper. 
 ```{r message=FALSE, warning=FALSE}
-p3A <- graph_list[[505]] + xlim(0.65,1)
-p3B <- graph_list[[729]] + xlim(0.65,1)
-p3C <- graph_list[[514]] + xlim(0.65,1)
-p3D <- graph_list[[502]] + xlim(0.65,1)
+p3A <- graph_list[[505]] + xlim(0.65,1) + 
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        plot.caption=element_blank())
+p3B <- graph_list[[729]] + xlim(0.65,1) + 
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        plot.caption=element_blank())
+p3C <- graph_list[[514]] + xlim(0.65,1) + 
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        plot.caption=element_blank())
+p3D <- graph_list[[502]] + xlim(0.65,1) + 
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        plot.caption=element_blank())
 p3_joint <- p3A + p3B + p3C + p3D + plot_annotation(tag_levels = 'A') 
 p3_joint
 ggsave(here("graphs","prop3_permutations.pdf"), plot=p3_joint, 
-       width=7, height = 5, units="in")
+       width=7.29, height = 4.5, units="in")
 embed_fonts(here::here("graphs","prop3_permutations.pdf"))
 ```
 
@@ -126,7 +138,7 @@ for (x in p4_00) {
   graph_list[[x$id]] <- g
   fname <- paste0("prop4_id_", x$id,".pdf")
   ggsave(here("graphs", "prop4_tests", fname), 
-         plot = g, width=7, height = 5, units="in")
+         plot = g, width=7.29, height = 4.5, units="in")
   embed_fonts(here::here("graphs","prop4_tests", fname))
 }
 ```
@@ -173,7 +185,7 @@ prop4_h <- prop4_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL.
 propositions <- prop3_h + prop4_h + plot_annotation(tag_levels = 'A')
 propositions
 ggsave(here("graphs", "test_of_propositions.pdf"), plot=propositions, 
-       width=7, height = 5, units="in")
+       width=7.29, height = 4.5, units="in")
 embed_fonts(here::here("graphs","test_of_propositions.pdf"))
 ```
 
@@ -202,7 +214,7 @@ p3s %>% bind_rows(p4s) %>%
   labs(x = "p-value",
        y = "Fraction") +
   scale_x_continuous(breaks=c(0,0.5,1))
-ggsave(here("graphs", "power_analysis.pdf"), width=7, height=5, units="in")
+ggsave(here("graphs", "power_analysis.pdf"), width=7.29, height=4.5, units="in")
 embed_fonts(here::here("graphs", "power_analysis.pdf"))
 ```
 

@@ -1,0 +1,336 @@
+---
+title: "Revision"
+author: "Erik Ø. Sørensen"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#source(here::here("packages.R"))
+#source(here::here("functions.R"))
+loadd("mmzame_decisions")
+```
+
+This document is structured to answer the concerns of the referees with
+respect to the empirical work. The plan is to incorporate what we need
+in the main analysis (and possibly an appendix), this document is more 
+for our own internal benefit.
+
+# Any impact of the observer treatment?
+
+Reviewer 2 writes that:
+
+> Given that it does not provide any testable implications of your
+> theory, I agree that analysis of these treatment will not give any
+> useful information and it should be excluded. If this treatment is
+> conducted at the end in all the sessions, it could not create any
+> issue in the preceding decisions. However, if the order of Observer
+> treatment varies across sessions, you can show that there is no
+> significant difference in the distributions of the decisions before
+> and after the Observer treatment.
+
+The order we decided on for the 4 treatments was to always first run the "Social
+Risk" treatment, and then the other 3 treatments in randomized order. So we have
+data on the 3 treatments in 6 different sequences. We can use this to create a
+test based on the share allocated to self in the "Social Choice" treatment (by
+sequence) and similarly the share allocated to the cheapest asset in the
+"Personal Risk" treatment.
+
+To implement, first create a data set with the individual orders of treatments and
+join to decisions:
+```{r}
+sequence <- mmzame_decisions %>% 
+  filter(round==1) %>%
+  pivot_wider(id_cols = id, names_from = treatment, values_from = phase, names_prefix = "seq_")
+ordered_means <- mmzame_decisions %>% 
+  left_join(sequence) %>% 
+  mutate(DRO_order = paste(seq_dictator, seq_risk, seq_observer, sep=","), 
+         share_self = y/(y+x),
+         share_cheapest = if_else(maxy>maxx, y/(y+x), x/(y+x))) %>%
+  group_by(id, DRO_order, treatment) %>%
+  summarize(share_self = mean(share_self),
+            share_cheapest = mean(share_cheapest)) %>%
+  ungroup()
+```
+If we look at the selfish individuals, does the test outcome vary between those
+who made all the observer choices at the very end and the others?
+
+I load the key test datasets and merge them to the sequence data:
+```{r}
+loadd("p3_00")
+loadd("selfish")
+prop3_ps <- map_dfr( keep(p3_00, function(x) (x$id %in% selfish$id)),
+                     function(x) tibble(id=x$id, p= x$p_com)) 
+prop3_ordered <- ordered_means %>% 
+  filter(treatment=="dictator") %>%
+  right_join(prop3_ps) %>% 
+  mutate(observer_at_end = ifelse( (DRO_order %in% c("2,3,4","3,2,4")), "Observer choices at end", "Observer choices mixed in"))
+```
+
+
+We can now run tests on whether the p-values are affected by whether there are observer choices mixed in or not,
+and we can look at the graphs by this condition.
+```{r}
+(observer_test <- wilcox.test(p ~ observer_at_end, data=prop3_ordered))
+caption_text <- paste("P-value of Wilcoxon rank sum test on equality of location: ", 
+                      format(observer_test$p.value, digits=3))
+prop3_ordered %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..]) ) + 
+  geom_histogram(binwidth=0.05, boundary=0) + 
+  theme_minimal() +
+  theme(plot.title.position = "plot") +
+  facet_wrap(.~observer_at_end, dir="v") +
+  labs(x = "Combined p-value", y ="Fraction of individuals",
+       title = "Is there an influence of observer choices on the test of proposition 3?",
+       caption=caption_text)
+ggsave(here::here("graphs","observer_choices_proposition3.pdf"),width=16, height = 20, units = "cm")
+```
+
+We see that the differences in the test of proposition 3 is very slight, and it is not significant. Since
+this is the kind of evidence we report in the paper, I think this should be sufficient to respond
+to the referee.
+
+Another perspective is to ask if there is any joint effect on the average choices by 
+the 6 possible sequences of the treatments. First for risk:
+```{r}
+ordered_means %>% filter(treatment=="risk") %>%
+  kruskal.test(share_cheapest ~ DRO_order, data=.)
+```
+Now for "Social Choice":
+```{r}
+ordered_means %>% filter(treatment=="dictator") %>%
+  kruskal.test(share_self ~ DRO_order, data=.) 
+```
+And for the observer choice itself
+```{r}
+ordered_means %>% filter(treatment=="observer") %>%
+  kruskal.test(share_cheapest ~ DRO_order, data=.) 
+```
+
+I think that this would be sufficient for responding to the referee, with the first
+test, confirming that the proposition-test is not affected, being the most important.
+For theory-free questions about order-effects, I think the 6-sequence nonparametric
+tests are the best. 
+
+What do the averages look like by order sequence?
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ordered_means %>% filter(treatment=="dictator") %>%
+  ggplot(aes(x=DRO_order, y=share_self)) + geom_bar(stat="summary") +
+  geom_errorbar(stat="summary", width=0.2) + theme_minimal() +
+  labs(title="Social choice outcome by choice-sequence",
+       y = "Mean share to self \u00B1 s.e.", 
+       x = "Sequence of (Social choice, Personal Risk, Observer)")
+ordered_means %>% filter(treatment=="risk") %>%
+  ggplot(aes(x=DRO_order, y=share_cheapest)) + geom_bar(stat="summary") +
+  geom_errorbar(stat="summary", width=0.2) + theme_minimal() +
+  labs(title="Personal risk outcome by choice-sequence",
+       y = "Mean share to cheapest asset \u00B1 s.e.", 
+       x = "Sequence of (Social choice, Personal Risk, Observer)")
+ordered_means %>% filter(treatment=="observer") %>%
+  ggplot(aes(x=DRO_order, y=share_cheapest)) + geom_bar(stat="summary") +
+  geom_errorbar(stat="summary", width=0.2) + theme_minimal() +
+  labs(title="Observer choice outcome by choice-sequence",
+       y = "Mean share to cheapest asset \u00B1 s.e.", 
+       x = "Sequence of (Social choice, Personal Risk, Observer)")
+```
+
+We can also ask a more directed question about whether
+the average dictator choices before/after observer choices are different. 
+Is there a difference in average dictator choices (share of tokens to self)
+that were made before / after observer? 
+
+But test with non-parametric and parametric tests. I define "before" as
+dictator coming before the observer:
+
+```{r}
+ordered_means %>% filter(treatment=="dictator") %>%
+  mutate(before = DRO_order %in% c("2,3,4","2,4,3","3,2,4")) %>%
+  wilcox.test(share_self ~ before, data=.)
+ordered_means %>% filter(treatment=="dictator") %>%
+  mutate(before = DRO_order %in% c("2,3,4","2,4,3","3,2,4")) %>%
+  t.test(share_self ~ before, data=.)
+```
+
+So with a such a selected test, I must admit that I don't have strong intuitions
+of the theoretical prior for such a test, and I think it should be considered
+secondary to those above. I might have mixed up the "before" definition in a
+discussion with Bertil, I'm not sure.
+
+# Symmetry
+
+Referee 3 brings up the question of *testing* for symmetry instead of the
+restriction on average share vs. the simple criterion we use (which is that the
+average share of tokens taken for self is $0.50\pm 0.05$).
+
+How to think about testing for symmetry? Two options stand out:
+
+1. Develop a non-parametric test for symmetry along the lines of our test for equality of preferences. This will be based on the fact that the mirror image of any actual budget set was equally likely as the realized
+budget set, and that under the symmetry hypothesis, we know that the *choice* would have been the mirror
+image of the actual choice. So the realized choices and budgets is one out of $2^{50}$ possible combinations, and we can see if the realized CCEI is in the far right tail of this simulated CCEI-distribution, in which
+case we reject the null hypothesis of symmetry (so, a one-sided test).
+2. Estimate a parametric model of preferences (such as the CES function in Section II.C of Fisman, Raymond, Shachar Kariv, and Daniel Markovits. 2007. "Individual Preferences for Giving." American Economic Review, 97 (5): 1858-1876.),
+$$
+U_s = \left[ \alpha  y^\rho + (1-\alpha) x^\rho \right]^{1/\rho}.
+$$ Can then test the hypothesis that $\alpha$ (weight on $y$, money for self) is equal to $1/2$.
+
+## Non-parametric symmetry test
+Except for the generation of hypothetical decisions and the fact that we only
+have one realized CCEI value, the test is in spirit the same as that of the main
+paper. To evaluate the appropriateness of our simplified criterion for symmetry,
+I put a p-value on each of the 276 participants being symmetric, and plot the
+p-value against the average share of tokens participants kept for themselves.
+
+```{r}
+loadd("symmetricp_dict")
+symmetricp_df <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p) )
+symmetric_evaluation <- mmzame_decisions %>% filter(treatment=="dictator") %>% 
+  mutate(yshare = y/(x+y)) %>%
+  group_by(id) %>%
+  summarize(share_self = mean(yshare)) %>% left_join(symmetricp_df)
+
+symmetric_evaluation %>% ggplot(aes(x=share_self, y=psymmetric)) +
+  geom_rect(aes(xmin=0.45,
+                xmax=0.55,
+                ymin=0, 
+                ymax=1.05
+  ), fill="grey90") +
+    geom_point(alpha=0.25) +
+  theme_minimal() + 
+  labs(x="Mean share of tokens taken for self",
+       y="P-value on H_0:symmetric",
+       title ="Simple criterion for symmetric/selfish vs. permutation test of symmetry",
+       caption ="Each marker represents one individual.\nThe light shaded area covers all the individuals classified as symmetric in the main paper.") +
+  theme(plot.title.position = "plot") 
+ggsave(here::here("graphs","symmetrytest_vs_simplecriterion.pdf"), width = 16, height = 10, units = "cm")
+```
+
+
+We see that for the most part, all selfish individuals (and the very generous)
+generate clear rejections of symmetry, while for those within the light grey
+band (classified as symmetric in the main paper) we mostly cannot reject
+symmetry. Note that we also cannot reject symmetry for a handful of individuals
+that have fairly large shares of tokens for themselves on average. These are
+individuals that are not very consistent to begin with (they are very random),
+and the nonparametric test has little power for such participants.
+
+
+### Testing all individuals in all treatments for symmetry
+
+```{r}
+loadd("symmetricp_dict")
+loadd("symmetricp_moral")
+loadd("symmetricp_risk")
+sym1 <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social") )
+sym2 <- symmetricp_moral %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social Risk") )
+sym3 <- symmetricp_risk %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Personal Risk") )
+symmetry_df <- list(sym1,sym2,sym3) %>% bind_rows() %>%
+  mutate(treatmentf = factor(treatment, levels=c("Social", "Personal Risk", "Social Risk")))
+symmetry_df %>% ggplot(aes(x=psymmetric, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary = 0) +
+  theme_minimal() +
+  labs(x="P-value on H0: symmetric", 
+       y="Fraction of participants",
+       title="Testing all participants for symmetry in each treatment",
+       caption="Each bar is 0.05 wide.") +
+  facet_wrap(.~treatmentf, dir="v") +
+  theme(plot.title.position = "plot")
+ggsave(here::here("graphs","symmetry_3_treatments.pdf"), width = 16, height = 20, units = "cm")
+```
+
+As we should expect, symmetry is rejected for almost all in the "Social treatment", but for almost none
+in the "Personal Risk" and "Social risk" treatments.
+
+
+## Parametric test
+For the CES utility function above, the  demand function for tokens to self can be written as
+$$
+y(p_y,p_x,m)= \left[ \frac{g}{(p_x/p_y)^r+g}\right]\frac{m}{p_y},
+$$
+with $g = (\alpha/(1-\alpha))^{1/(1-\rho)}$ and $r= -\rho/(1-\rho)$, and I follow Fisman et al
+in formulating the individual level specification 
+$$ \frac{p_{yi} y_i}{m_i} = \frac{g_i}{(p_{xi}/p_{yi})^r + g} + \varepsilon_i,
+$$ for decisions indexed by $i=1,\dots,50$. I assume $E[\varepsilon_i]=0$ for all budgets $i$.
+I also follow Fisman et al and restrict estimation to those that are not clearly selfish (more than
+95\% of the budget to themselves on average) as the then the joint identification of $(\alpha,\rho)$ is
+not possible. 
+
+For estimation, I first estimate $(r,g)$ and then transform the estimated parameters and covariance
+matrix to $\alpha$ estimates with confidence intervals. We need some starting values for the
+estimation procedure. For each participant, I try nine starting values: all combinations 
+of $\alpha\in\{0.5,0.7,0.9\}$ and $\rho\in\{-1, 0, 0.8\}$
+
+```{r}
+loadd("CES_estimates")
+symmetric_evaluation2 <- CES_estimates %>% left_join(symmetric_evaluation) 
+symmetric_evaluation2 %>%
+  ggplot(aes(x=share_self, y=alpha, ymin = alpha - 1.96*alpha_se, ymax = alpha + 1.96*alpha_se)) +
+  geom_rect(aes(xmin=0.45,
+                xmax=0.55,
+                ymin=0, 
+                ymax=1.05
+  ), fill="grey90") +
+  geom_point() + 
+  geom_errorbar(width=0.02) + 
+  coord_cartesian(ylim=c(0,1), xlim=c(0.2,0.8)) +
+  theme_minimal() +
+  labs(x="Mean share of tokens taken for self",
+       y="Estimated \u03B1 \u00B1 95% conf.int.",
+       title ="Simple criterion for symmetric/selfish vs. estimated CES-alpha",
+       caption="The light shaded area covers all the individuals classified as symmetric in the main paper.") + 
+  theme(plot.title.position = "plot") 
+```
+
+We see that with the exception of a few outliers, estimated to be strongly
+"Rawlsian", with very high $\rho$, this is more or less in line with
+expectation. (Note that with equal prices, $\alpha=0.99$ and $\rho=-100$, the
+predicted budget share for self is only 0.51, the exponential terms outweigh the
+$\alpha$ weights). The standard errors are derived using the delta-rule from the
+NLS estimates (using the standard R "nls" command), many of them seem to tight
+to me. For 16 participants, estimation did not converge with any of the 9 starting
+points. I could put more time into these if it is important.
+
+# Equality of preferences - all combinations
+
+We discussed testing all three pairs of treatments, breaking the presentation
+down by the symmetric condition. First, merge all data label and merge with the
+proportion to self.
+
+```{r}
+loadd("p2_00")
+loadd("p3_00")
+loadd("p4_00")
+self_shares <- mmzame_decisions %>% 
+  filter(treatment=="dictator") %>%
+  mutate(share_self = y/(x+y)) %>%
+  group_by(id) %>%
+  summarize(mean_share_self = mean(share_self))
+prop3_ps <- map_dfr( p3_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Social R vs. P Risk")) 
+prop2_ps <- map_dfr( p2_00, function(x) tibble(id=x$id, p= x$p_com, comparison="P Risk vs Social")) 
+prop4_ps <- map_dfr( p4_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Social R vs. Social")) 
+all_tests <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
+  bind_rows() %>% left_join(self_shares) %>% mutate(selfish = (mean_share_self> 0.95),
+                                                    selfishf = factor(ifelse(selfish,"Selfish","Not Selfish")))
+all_tests %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  facet_grid(comparison~selfishf) +
+  labs( y = "Fraction of participants",
+        x = "P-value on H0: Equality of preferences",
+        title = "Testing equality of preferences by selfishness")
+    
+
+```
+
+We were going over different ways to present these results. Please let me know if 
+there are other views you would prefer. 
+
+We also talked about extending the pairwise tests of domains to a 3-way test
+of all domains simultaneously. In the light of the pairwise tests, I don't think
+there will be any surprises from such a test. But I think we might want to claim
+the K-group tests for our credit. I'll find time to program up the K-group
+test this week. 
+
+

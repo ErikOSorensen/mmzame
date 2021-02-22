@@ -2,15 +2,16 @@ source("packages.R")
 source("functions.R")
 
 NP_S = 10000
-N_STANDARD_BRONARS = 100000
+N_STANDARD_BRONARS = 10000
 SELFISH_REQUIREMENT = 0.05
 
 mmzame_plan <- drake_plan(
-  mmzame_decisions = readRDS(file_in(here("data/mmzame_decisions.rds"))),
-  background = readRDS( file_in(here("data/background.rds"))),
-  
+  mmzame_decisions = readRDS(file_in("data/mmzame_decisions.rds")),
+  background = readRDS( file_in("data/background.rds")),
   prop3list = prepare_decisions(mmzame_decisions, c("moral", "risk")),
   prop4list = prepare_decisions(mmzame_decisions, c("moral", "dictator")),
+  prop2list = prepare_decisions(mmzame_decisions, c("risk", "dictator")),
+  p2_00 = purrr::map(prop2list, p_permutations_bronars, np=NP_S, p_Bronars=0.00, rFOSD=TRUE),
   p3_00 = purrr::map(prop3list, p_permutations_bronars, np=NP_S, p_Bronars=0.00, rFOSD=TRUE),
   p3_05 = purrr::map(prop3list, p_permutations_bronars, np=NP_S, p_Bronars=0.05, rFOSD=TRUE),
   p3_10 = purrr::map(prop3list, p_permutations_bronars, np=NP_S, p_Bronars=0.10, rFOSD=TRUE),
@@ -38,6 +39,14 @@ mmzame_plan <- drake_plan(
   hypotheses_data = prepare_hypothesis_data(prop3, selfish, prop4, symmetric),
   bronars_budgets = bronars_datasets(mmzame_decisions, 50, N_STANDARD_BRONARS),
   pure_bronars = purrr::map_dbl(bronars_budgets, ccei_on_bronars_budgets_df),
+  sym_moral = prepare_decisions(mmzame_decisions, c("moral")),
+  sym_dict  = prepare_decisions(mmzame_decisions, c("dictator")),
+  sym_risk  = prepare_decisions(mmzame_decisions, c("risk")),
+  symmetricp_dict = purrr::map(sym_dict, p_symmetric, np=NP_S),
+  symmetricp_moral = purrr::map(sym_moral, p_symmetric, np=NP_S),
+  symmetricp_risk = purrr::map(sym_risk, p_symmetric, np=NP_S),
+  CES_dfs = make_CES_dfs(mmzame_decisions), 
+  CES_estimates = make_CES_estimates(CES_dfs),
   Aaggregate_behavior = rmarkdown::render(
     knitr_in('vignettes/aggregate_behavior.Rmd'),
     output_file = file_out('aggregate_behavior.html'),
@@ -53,5 +62,9 @@ mmzame_plan <- drake_plan(
   Dtesting_theory = rmarkdown::render(
     knitr_in("vignettes/testing_theory.Rmd"),
     output_file = file_out("testing_theory.html"),
+    quiet = TRUE), 
+  Revision = rmarkdown::render(
+    knitr_in("vignettes/revision.Rmd"),
+    output_file = file_out("revision.html"),
     quiet = TRUE)
 )

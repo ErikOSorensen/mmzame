@@ -110,7 +110,7 @@ prepare_decisions <- function(decisions, treatments) {
   df <- decisions %>% 
     filter(treatment %in% treatments) %>%
     group_by(id, bset) %>% 
-    filter(n()==2) %>%
+    filter(n()==length(treatments)) %>%
     mutate( t = as.factor(treatment), px = maxy/maxx, py = 1.0) %>%
     select(id, t, bset, px, py, x, y) %>%
     ungroup() %>%
@@ -161,3 +161,143 @@ ccei_on_bronars_budgets_df <- function(df) {
   df_p <- df %>% select(px,py)
   ccei(df_x, df_p)
 }
+
+# p_permutations_bronars <- function(decisions_individual, np = 10000, p_Bronars=0, rFOSD=FALSE) {
+  
+p_symmetric <- function(decisions_df, np = 99) {
+  id <- decisions_df$id[1]
+  n <- nrow(decisions_df)
+  x <- decisions_df %>% 
+    select(x,y)
+  p <- decisions_df %>%
+    select(px,py)
+  ccei_actual <- ccei(x,p)
+  cceis <- numeric(np) 
+  xm <- decisions_df %>%
+    mutate(xm = y, ym = x) %>% select(xm, ym) %>% rename(x = xm, y = ym)
+  pm <- decisions_df %>% # 
+    mutate(pxm = py, pym = px) %>% select(pxm, pym) %>% rename(px=pxm, py=pym) 
+  for (i in 1:np) {
+    s <- (rbinom(n,1,0.5)==1)
+    x1 <- x[s,]
+    p1 <- p[s,]
+    x2 <- xm[!s,]
+    p2 <- pm[!s,]
+    xp <- rbind(x1,x2)
+    pp <- rbind(p1,p2)
+    cceis[i] <- ccei(xp,pp) 
+  }
+  f <- ecdf(cceis)
+  p_upper <- 1 - f(ccei_actual - 0.000001)
+  list(id=id, ccei=ccei_actual, cceis_permuted=cceis, 
+       p = p_upper)
+}
+
+cesinv <- function(x) {
+  ta <- x[['ta']]
+  tr <- x[['tr']]
+  alpha <- 1 / (1 + exp(ta))
+  rho <- 1 - exp(tr)
+  c("rho"=rho, "alpha"=alpha)
+}
+delta.method <- function(func, vcov, x) {
+  params <- func(x)
+  stopifnot(all(names(x) == colnames(vcov)))
+  stopifnot(names(x)==c("ta","tr"))
+  d <- numDeriv::jacobian(func, x)
+  new.vcov <- d %*% vcov %*% t(d)
+  colnames(new.vcov) <- names(params)
+  rownames(new.vcov) <- names(params)
+  
+  list(parameters = params, vcov = new.vcov)
+}
+
+
+pred_bud_share <- function(price,talpha,trho) {
+  alpha <- max(min( 1 / (1 + exp(talpha)), 1-1E-14), 1E-14)
+  rho <- min(1 - exp(trho), 1-1E-14)
+  r <- -rho/(1-rho)
+  g <- (alpha/(1-alpha))^(1/(1-rho))
+  
+  g/(price^r + g)
+}
+
+alpha_inv <- function(alpha) {
+  talpha <- log(1/alpha - 1)
+  talpha
+}
+
+rho_inv <- function(rho) {
+  trho <- log( 1 - rho)
+  trho
+}
+
+# Possible starting values:
+starting_values <- list( 
+  c(alpha = 0.5, rho = -1),
+  c(alpha = 0.5, rho = 0),
+  c(alpha = 0.5, rho = 0.8),
+  c(alpha = 0.7, rho = -1),
+  c(alpha = 0.7, rho = 0),
+  c(alpha = 0.7, rho = 0.8),
+  c(alpha = 0.9, rho = -1),
+  c(alpha = 0.9, rho = 0),
+  c(alpha = 0.9, rho = 0.8),
+  c(alpha = 0.5, rho = -10),
+  c(alpha = 0.5, rho = -100)
+)
+
+estimate_ces <- function(df, sv = starting_values) {
+  lowdev <- 1e10
+  est <- NULL
+  id <- min(df$id)
+  for (v in sv) {
+    estc <- try(nls( bshare_self ~ pred_bud_share(p, ta, tr), 
+                     data=df, 
+                     start=list( ta= alpha_inv(v[['alpha']]), 
+                                 tr= rho_inv(v[['rho']])), 
+                     trace=FALSE),
+                silent = TRUE)
+    if (class(estc)!="try-error") {
+      if (deviance(estc)<lowdev) {
+        est <- estc
+        lowdev <- deviance(est)
+      }
+    }
+  }
+  if(!is.null(est)) { 
+    orgest <- delta.method(cesinv, vcov(est), coef(est))
+    tibble( id = id,
+            alpha = orgest$parameters[['alpha']],
+            rho = orgest$parameters[['rho']],
+            alpha_se = sqrt(orgest$vcov['alpha','alpha']),
+            rho_se = sqrt(orgest$vcov['rho','rho']),
+            deviance = lowdev,
+            stopMessage = est$convInfo$stopMessage)
+  } else {
+    tibble(id = id,
+           alpha = NA, rho=NA, alpha_se=NA, rho_se=NA, deviance = NA, stopMessage="Failed!")
+  }
+}
+make_CES_dfs <- function(mmzame_decisions) {
+  mmzame_decisions %>% 
+    filter(treatment=="dictator") %>%
+    mutate( px = 1/maxx, 
+            py = 1/maxy,
+            m = x*px + y*py,
+            bshare_self = py*y/m,
+            p = px/py) %>%
+    group_by(id) %>%
+    mutate(mean_bshare_self = mean(bshare_self)) %>%
+    filter(mean_bshare_self <0.95) %>%
+    ungroup() %>%
+    select(id, bshare_self, p)
+}
+make_CES_estimates <- function(dfs) {  
+  dfs %>% 
+    group_by(id) %>%
+    group_split() %>% 
+    map(estimate_ces) %>%
+    bind_rows()
+}
+

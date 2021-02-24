@@ -11,6 +11,8 @@ mmzame_plan <- drake_plan(
   prop3list = prepare_decisions(mmzame_decisions, c("moral", "risk")),
   prop4list = prepare_decisions(mmzame_decisions, c("moral", "dictator")),
   prop2list = prepare_decisions(mmzame_decisions, c("risk", "dictator")),
+  all_domains = df_3way(mmzame_decisions),
+  pall_domains = calculate_3waytest(all_domains, np=NP_S),
   p2_00 = purrr::map(prop2list, p_permutations_bronars, np=NP_S, p_Bronars=0.00, rFOSD=TRUE),
   p3_00 = purrr::map(prop3list, p_permutations_bronars, np=NP_S, p_Bronars=0.00, rFOSD=TRUE),
   p3_05 = purrr::map(prop3list, p_permutations_bronars, np=NP_S, p_Bronars=0.05, rFOSD=TRUE),

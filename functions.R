@@ -162,8 +162,6 @@ ccei_on_bronars_budgets_df <- function(df) {
   ccei(df_x, df_p)
 }
 
-# p_permutations_bronars <- function(decisions_individual, np = 10000, p_Bronars=0, rFOSD=FALSE) {
-  
 p_symmetric <- function(decisions_df, np = 99) {
   id <- decisions_df$id[1]
   n <- nrow(decisions_df)
@@ -301,3 +299,72 @@ make_CES_estimates <- function(dfs) {
     bind_rows()
 }
 
+p_permutationsK <- function(id, p_df, x_list, np = 99) {
+  # Inputs should be 
+  # id: id of individual
+  # p_df: NxG dataframe of prices, (N choices, G goods). 
+  # x_list: K-list of dataframes, each of size NxG.
+  # The order of budget sets in each of the x_list datasets must match p_df !!!
+  K <- length(x_list)
+  nobs <- nrow(p_df)
+  ngoods <- ncol(p_df)
+  for (i in 1:K) {
+    stopifnot( nobs == nrow(x_list[[i]]) & (ngoods == ncol(x_list[[i]])))
+  }
+  actual_cceis <- numeric(K)
+  permuted_cceis <- numeric(np)
+  for (i in 1:K) {
+    actual_cceis[i] <- ccei(x_list[[i]], p_df)
+  }
+  xperm <- tibble(x_list[[1]]) # Allocates new memory to the copy
+  for (i in 1:np) {
+    xchoice <- sample(seq_along(x_list), nobs, TRUE)
+    for (j in 1:nobs) {
+      xperm[j,] <- x_list[[xchoice[j]]][j,]
+    }
+    permuted_cceis[i] <- ccei(xperm, p_df)
+  }
+  list(actual_cceis, permuted_cceis)
+  tmin <- min(actual_cceis)
+  tmax <- max(actual_cceis)
+  f <- ecdf(permuted_cceis)
+  p_min <- (1 - f(tmin-0.00001))^K
+  p_max <- 1 - f(tmax-0.00001)^K
+  c(p_min, p_max)
+  list(id = id, ccei=actual_cceis, cceis_permuted = permuted_cceis,
+       p_min =p_min, p_max=p_max, p_com = min( min(p_min,p_max)*2, 1))
+}
+
+ind_3way <- function(df) {
+  # Set up data for estimation of a 3-way test
+  id <- min(df$id)
+  plist <- df %>% 
+    group_by(t) %>%
+    group_split() %>%
+    map( function(df2) {
+      df2 %>% arrange(bset) %>% select(px, py)
+    })
+  p_df <- plist[[1]]
+  xlist <- df %>%
+    group_by(t) %>%
+    group_split() %>%
+    map( function(df2) {
+      df2 %>% arrange(bset) %>% select(x, y)
+    })
+  list(id=id, p_df=p_df, x_list=xlist)
+}
+
+df_3way <- function(df) {
+  prepare_decisions(df, c("dictator","moral","risk")) %>%
+    purrr::map(ind_3way)
+}
+
+calculate_3waytest <- function(data_3way_list, np=99) {
+  out <- vector("list", length(data_3way_list))
+  for(i in seq_along(data_3way_list)) {
+    out[[i]] <- p_permutationsK(data_3way_list[[i]]$id,
+                                data_3way_list[[i]]$p_df,
+                                data_3way_list[[i]]$x_list, np=np)
+  }
+  out
+}

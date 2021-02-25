@@ -15,7 +15,7 @@ mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>%
   filter(treatment %in% c("moral", "risk", "dictator")) %>%
   mutate(yshare = y/(y+x), 
          cheapshare = if_else(maxy>=maxx, y/(y+x), x/(y+x))) 
-background <- readRDS(here("data", "background.rds"))
+loadd("background")
 ```
 
 

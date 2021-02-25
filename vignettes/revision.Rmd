@@ -319,7 +319,8 @@ all_tests %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..
   facet_grid(comparison~selfishf) +
   labs( y = "Fraction of participants",
         x = "P-value on H0: Equality of preferences",
-        title = "Testing equality of preferences by selfishness")
+        title = "Testing equality of preferences by selfishness",
+        caption="Binwidth: 0.05.")
     
 
 ```
@@ -327,10 +328,51 @@ all_tests %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..
 We were going over different ways to present these results. Please let me know if 
 there are other views you would prefer. 
 
-We also talked about extending the pairwise tests of domains to a 3-way test
-of all domains simultaneously. In the light of the pairwise tests, I don't think
-there will be any surprises from such a test. But I think we might want to claim
-the K-group tests for our credit. I'll find time to program up the K-group
-test this week. 
+## 3-way test across all domains
 
+It is straightforward to generalize from drawing decisions from one out of two
+domains to drawing them from K different domains. Of course, the distribution 
+of the test statistic changes, but in general the minimum and maximum of K draws
+from a permutation distribution $\widehat{F}$ can be defined
+as 
+$$ \widehat{F}_{e^{+}}(s) = \left(\widehat{F}(s)\right)^K,$$
+and 
+$$
+\widehat{F}_{e^{-}}(s) =  1 - \left(1 - \widehat{F}(s)\right)^K.
+$$
+
+We are still interested in rejections which take the form of realizations being in the
+right tail of this distribution (more consistent within than between domains), and
+implement with a small $\epsilon$ offset because the permutation distributions of $\widehat{F}$
+are lumpy.  I have coded this up as a general function that takes a list of choice data
+frames as an argument, and which takes care of learning K from the length of this list.
+This function is not as fast as purpose-built 2-domain functions, and so far I haven't 
+added the option of adding "Bronars" choices. 
+
+Loading pre-calculated tests, we can look at the distribution of p-values in the test
+that preferences are the same in all of the three domains: Social, Social Risk, and Personal Risk.  
+
+The data comes in the form of a list (keeping all the permuted CCEI values), so
+they need to be extracted to form a data frame for graphing.
+```{r}
+loadd("pall_domains")
+allp_df <- pall_domains %>% map(function(X) 
+  tibble(id=X$id, p_min=X$p_min, p_max=X$p_max, p_com = X$p_com)) %>%
+  bind_rows()
+```
+
+```{r}
+allp_df %>% ggplot(aes(x = p_com, 
+                       y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  labs(x = "P-value on H0: Equality of preferences",
+       y = "Fraction of participants",
+       title ="Testing equality across all 3 domains",
+       caption="Binwidth: 0.05.") +
+  theme(plot.title.position = "plot")
+```
+
+For `r format(100*mean((allp_df$p_com<0.05)), digits=3)`% of the participants, we reject
+equality of preferences at the 5% level.
 

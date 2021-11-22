@@ -10,11 +10,7 @@ html_document:
 knitr::opts_chunk$set(echo = TRUE)
 #source(here::here("packages.R"))
 #source(here::here("functions.R"))
-font_add_google("Roboto","Roboto")
-showtext_auto()
-mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>% 
-  filter(treatment %in% c("moral", "risk", "dictator"))
-background = readRDS(here("data", "background.rds"))
+tar_load(mmzame_decisions)
 ```
 
 
@@ -76,10 +72,9 @@ ccei_bar_fractions %>% ggplot(aes(x=ccei_group, y=fraction, group=domain, fill=d
   labs(x = "CCEI",
        y = "Fraction of subjects") +
   theme_minimal() + 
-  theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
+  theme(legend.title=element_blank()) + 
   scale_fill_grey()
 ggsave(here::here("graphs","empirical_cceis.pdf"))
-embed_fonts(here::here("graphs","empirical_cceis.pdf"))
 ```
 
 
@@ -89,7 +84,7 @@ embed_fonts(here::here("graphs","empirical_cceis.pdf"))
 
 I have pre-calculated the Bronars numbers, and summarize these:
 ```{r}
-loadd("pure_bronars")
+tar_load(pure_bronars)
 bronars_df <- tibble(domain = "Bronars", ccei=pure_bronars)
 bronars_df %>% summarize(Bronars_mean_ccei = mean(ccei),
                          Bronars_above_90 = mean( ccei>0.9)) %>%
@@ -127,9 +122,8 @@ df %>% ggplot(aes(x=ccei_group, y=fraction, group=outcome, fill=outcome)) +
   labs(x = "CCEI",
        y = "Fraction of subjects") +
   theme_minimal() + 
-  theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
+  theme(legend.title=element_blank()) + 
   scale_fill_grey()
 ggsave(here("graphs", "empirical_cceis_and_Bronars.pdf"))
-embed_fonts(here("graphs", "empirical_cceis_and_Bronars.pdf"))
 ```
 

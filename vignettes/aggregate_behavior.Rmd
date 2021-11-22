@@ -9,10 +9,7 @@ html_document:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #source(here::here("packages.R"))
-font_add_google("Roboto","Roboto")
-showtext_auto()
-mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds"))
-background = readRDS(here("data", "background.rds"))
+tar_load(mmzame_decisions)
 ```
 
 This is to calculate the descriptives in the subsection on aggregate behavior in 
@@ -55,9 +52,8 @@ average_social_decisions %>% ggplot(aes(x=mean_yshare, y=(..count..)/tapply(..co
   labs(x = "Mean y/(x+y)",
        y = "Fraction",
        caption ="Decisions in the Social Choice treatment.") +
-  theme_minimal() + theme( text=element_text(family="Roboto") )
+  theme_minimal() 
 ggsave(here::here("graphs", "aggregate_social_choice.pdf"))
-embed_fonts(here::here("graphs", "aggregate_social_choice.pdf"))
 ```
 # Distribution of choices in the *Personal Risk* and the *Social Risk* treatments
 
@@ -86,12 +82,11 @@ average_symmetric_decisions %>% ggplot(aes(x=mean_cheapest, y=(..count..)/tapply
   geom_histogram(binwidth=0.05, boundary=0.0) + 
   labs(x = "Mean share of cheapest asset in portfolio",
        y = "Fraction") +
-  theme_minimal() + theme( text=element_text(family="Roboto") ) + facet_grid(.~treatmentf)
+  theme_minimal()  + facet_grid(.~treatmentf)
 ggsave(here::here("graphs", "aggregate_risks.pdf"))
-embed_fonts(here::here("graphs", "aggregate_risks.pdf"))
 ```
 
-How may are in the extreme groups? 
+How many are in the extreme groups? 
 ```{r}
 average_symmetric_decisions %>%
   mutate(more_than_95p = (mean_cheapest > 0.95),
@@ -140,17 +135,15 @@ bar_fractions <- bar_data %>%
 
 Now, it should be possible to use ggplot to figure out how to present the groups:
 ```{r}
-font_add_google("Roboto","Roboto")
 showtext_auto()
 bar_fractions %>% ggplot(aes(x=ygroup, y=fraction, group=treatmentf, fill=treatmentf)) + 
   geom_bar(stat="identity", position=position_dodge2()) +
   labs(x = "Token share",
        y = "Fraction of subjects") +
   theme_minimal() + 
-  theme(legend.title=element_blank(), text=element_text(family="Roboto")) + 
+  theme(legend.title=element_blank()) + 
   scale_fill_grey()
 ggsave(here::here("graphs","aggregate_choices.pdf"))
-embed_fonts(here::here("graphs","aggregate_choices.pdf"))
 ```
 
 

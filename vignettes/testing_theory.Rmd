@@ -10,32 +10,28 @@ html_document:
 knitr::opts_chunk$set(echo = TRUE)
 #source(here::here("packages.R"))
 #source(here::here("functions.R"))
-font_add_google("Roboto","Roboto")
-showtext_auto()
-mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>% 
-  filter(treatment %in% c("moral", "risk", "dictator"))
-background = readRDS(here("data", "background.rds"))
+tar_load(mmzame_decisions)
 ```
 
 This is to present the tests on individual behavior in 
 **"Linking Social and Personal Preferences: Theory and Experiment"** by William R. Zame, 
 Bertil Tungodden, Erik Ø. Sørensen, Shachar Kariv, and Alexander W. Cappelen. 
 
-Prepping of data and pre-calculation of test statistics is outlined in the drake file "plan.R". 
+Prepping of data and pre-calculation of test statistics is outlined in the drake file "_targets.R". 
 
 ```{r}
-loadd("p3_00")
-loadd("p3_05")
-loadd("p3_10")
-loadd("p3_15")
-loadd("p3_20")
-loadd("p4_00")
-loadd("p4_05")
-loadd("p4_10")
-loadd("p4_15")
-loadd("p4_20")
-loadd("selfish")
-loadd("symmetric")
+tar_load("p3_00")
+tar_load("p3_05")
+tar_load("p3_10")
+tar_load("p3_15")
+tar_load("p3_20")
+tar_load("p4_00")
+tar_load("p4_05")
+tar_load("p4_10")
+tar_load("p4_15")
+tar_load("p4_20")
+tar_load("selfish")
+tar_load("symmetric")
 ```
 
 # Testing proposition 3
@@ -61,13 +57,11 @@ for (x in p3_00) {
     geom_vline(xintercept = x$ccei1) +
     geom_vline(xintercept = x$ccei2) + 
     theme_minimal() +
-    theme(text=element_text(family="Roboto")) + 
     labs(x = "Afriat's CCEI", y = "Fraction", caption = caption)
   graph_list[[x$id]] <- g
   fname <- paste0("prop3_id_", x$id,".pdf")
   ggsave(here("graphs", "prop3_tests", fname), 
          plot = g, width=7.29, height = 4.5, units="in")
-  embed_fonts(here::here("graphs", "prop3_tests",fname))
 }
 ```
 
@@ -125,13 +119,11 @@ for (x in p4_00) {
     geom_vline(xintercept = x$ccei1) +
     geom_vline(xintercept = x$ccei2) + 
     theme_minimal() +
-    theme(text=element_text(family="Roboto")) + 
     labs(x = "Afriat's CCEI", y = "Fraction", caption = caption)
   graph_list[[x$id]] <- g
   fname <- paste0("prop4_id_", x$id,".pdf")
   ggsave(here("graphs", "prop4_tests", fname), 
          plot = g, width=7.29, height = 4.5, units="in")
-  embed_fonts(here::here("graphs","prop4_tests", fname))
 }
 ```
 
@@ -163,14 +155,12 @@ prop4_df <- tibble(p=prop4_ps)
 prop3_h <- prop3_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
-  theme(text=element_text(family="Roboto")) + 
   labs(x = "p-value",
        y = "Fraction",
        caption="Tests of Proposition 3 on the selfish individuals.")
 prop4_h <- prop4_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
-  theme(text=element_text(family="Roboto")) + 
   labs(x = "p-value",
        y = "Fraction",
        caption="Tests of Proposition 4 on the impartial individuals.")
@@ -178,7 +168,6 @@ propositions <- prop3_h + prop4_h + plot_annotation(tag_levels = 'A')
 propositions
 ggsave(here("graphs", "test_of_propositions.pdf"), plot=propositions, 
        width=7.29, height = 4.5, units="in")
-embed_fonts(here::here("graphs","test_of_propositions.pdf"))
 ```
 
 
@@ -187,7 +176,7 @@ For the table, we don't distinguish between the two propositions.
 
 # Creating graph to showcase the power of the experiment.
 
-We want to joint all the data to from the simulations
+We want to joint all the data from the simulations
 ```{r}
 p3s <- c(p3_00, p3_05, p3_10, p3_15, p3_20) %>%
   keep(function(x) x$id %in% selfish$id) %>%
@@ -201,13 +190,11 @@ p3s %>% bind_rows(p4s) %>%
   ggplot(aes(x=p_prop, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
-  theme(text=element_text(family="Roboto")) +
   facet_grid(prop ~ p_bronars) +
   labs(x = "p-value",
        y = "Fraction") +
   scale_x_continuous(breaks=c(0,0.5,1))
 ggsave(here("graphs", "power_analysis.pdf"), width=7.29, height=4.5, units="in")
-embed_fonts(here::here("graphs", "power_analysis.pdf"))
 ```
 
 ## Now for a Table variant

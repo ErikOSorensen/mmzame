@@ -12,7 +12,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 #source(here::here("packages.R"))
 #source(here::here("functions.R"))
-loadd("mmzame_decisions")
+tar_load(mmzame_decisions)
 ```
 
 This document is structured to answer the concerns of the referees with
@@ -43,10 +43,11 @@ sequence) and similarly the share allocated to the cheapest asset in the
 To implement, first create a data set with the individual orders of treatments and
 join to decisions:
 ```{r}
-sequence <- mmzame_decisions %>% 
+tar_load(mmzame_decisions_alltreatments)
+sequence <- mmzame_decisions_alltreatments %>% 
   filter(round==1) %>%
   pivot_wider(id_cols = id, names_from = treatment, values_from = phase, names_prefix = "seq_")
-ordered_means <- mmzame_decisions %>% 
+ordered_means <- mmzame_decisions_alltreatments %>% 
   left_join(sequence) %>% 
   mutate(DRO_order = paste(seq_dictator, seq_risk, seq_observer, sep=","), 
          share_self = y/(y+x),
@@ -61,8 +62,8 @@ who made all the observer choices at the very end and the others?
 
 I load the key test datasets and merge them to the sequence data:
 ```{r}
-loadd("p3_00")
-loadd("selfish")
+tar_load("p3_00")
+tar_load("selfish")
 prop3_ps <- map_dfr( keep(p3_00, function(x) (x$id %in% selfish$id)),
                      function(x) tibble(id=x$id, p= x$p_com)) 
 prop3_ordered <- ordered_means %>% 
@@ -184,7 +185,7 @@ I put a p-value on each of the 276 participants being symmetric, and plot the
 p-value against the average share of tokens participants kept for themselves.
 
 ```{r}
-loadd("symmetricp_dict")
+tar_load("symmetricp_dict")
 symmetricp_df <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p) )
 symmetric_evaluation <- mmzame_decisions %>% filter(treatment=="dictator") %>% 
   mutate(yshare = y/(x+y)) %>%
@@ -220,9 +221,9 @@ and the nonparametric test has little power for such participants.
 ### Testing all individuals in all treatments for symmetry
 
 ```{r}
-loadd("symmetricp_dict")
-loadd("symmetricp_moral")
-loadd("symmetricp_risk")
+tar_load("symmetricp_dict")
+tar_load("symmetricp_moral")
+tar_load("symmetricp_risk")
 sym1 <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social") )
 sym2 <- symmetricp_moral %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social Risk") )
 sym3 <- symmetricp_risk %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Personal Risk") )
@@ -263,7 +264,7 @@ estimation procedure. For each participant, I try nine starting values: all comb
 of $\alpha\in\{0.5,0.7,0.9\}$ and $\rho\in\{-1, 0, 0.8\}$
 
 ```{r}
-loadd("CES_estimates")
+tar_load("CES_estimates")
 symmetric_evaluation2 <- CES_estimates %>% left_join(symmetric_evaluation) 
 symmetric_evaluation2 %>%
   ggplot(aes(x=share_self, y=alpha, ymin = alpha - 1.96*alpha_se, ymax = alpha + 1.96*alpha_se)) +
@@ -299,9 +300,9 @@ down by the symmetric condition. First, merge all data label and merge with the
 proportion to self.
 
 ```{r}
-loadd("p2_00")
-loadd("p3_00")
-loadd("p4_00")
+tar_load("p2_00")
+tar_load("p3_00")
+tar_load("p4_00")
 self_shares <- mmzame_decisions %>% 
   filter(treatment=="dictator") %>%
   mutate(share_self = y/(x+y)) %>%
@@ -355,7 +356,7 @@ that preferences are the same in all of the three domains: Social, Social Risk, 
 The data comes in the form of a list (keeping all the permuted CCEI values), so
 they need to be extracted to form a data frame for graphing.
 ```{r}
-loadd("pall_domains")
+tar_load("pall_domains")
 allp_df <- pall_domains %>% map(function(X) 
   tibble(id=X$id, p_min=X$p_min, p_max=X$p_max, p_com = X$p_com)) %>%
   bind_rows()

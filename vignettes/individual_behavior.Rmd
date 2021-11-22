@@ -9,13 +9,10 @@ html_document:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #source(here::here("packages.R"))
-font_add_google("Roboto","Roboto")
-showtext_auto()
-mmzame_decisions = readRDS(here("data", "mmzame_decisions.rds")) %>%
-  filter(treatment %in% c("moral", "risk", "dictator")) %>%
+tar_load(mmzame_decisions)
+mmzame_decisions <- mmzame_decisions %>%
   mutate(yshare = y/(y+x), 
          cheapshare = if_else(maxy>=maxx, y/(y+x), x/(y+x))) 
-loadd("background")
 ```
 
 
@@ -82,12 +79,10 @@ for (id0 in ids) {
                          legend.position = "bottom", 
                          legend.justification = "center",
                          legend.direction = "horizontal",
-                         legend.box = "horizontal",
-                         text=element_text(family="Roboto"))
+                         legend.box = "horizontal")
     selfishgraphs[[id0]] <- sg
     print(sg)
     ggsave(here::here("graphs", fname2), width=7.29,height=4.5)
-    embed_fonts(here::here("graphs", fname2))
     } else if (caption == "impartial") {
     fname <- paste0("logpricegraphs/impartial/yshare_logp_",id0,".pdf")
     caption <- "This individual is impartial."
@@ -101,9 +96,8 @@ for (id0 in ids) {
     labs(x = "log(p)",
          y = "y/(x+y)",
          caption = caption) +
-    theme_minimal() + theme(legend.position = c(0.88,0.8), text=element_text(family="Roboto"), legend.title=element_blank() )
+    theme_minimal() + theme(legend.position = c(0.88,0.8), legend.title=element_blank() )
   ggsave(here::here("graphs", fname), width=7.29, height=4.5 )
-  embed_fonts(here::here("graphs", fname))
 }
 ```
 

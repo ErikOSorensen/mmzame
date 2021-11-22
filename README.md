@@ -1,7 +1,11 @@
 # mmzame
 Code for "Linking Social and Personal Preferences: Theory and Experiment"
 
-The `make.R` file will run a `drake` plan to calculate everything and 
-make both graphs and tables (to be found in the vignettes) in the `vignette/` 
-sub-directory.
+Authors: 
+
+- William Zame, http://www.econ.ucla.edu/zame/
+- Bertil Tungodden, https://sites.google.com/view/bertiltungodden/home
+- Erik Ø. Sørensen, https://www.statsokonomen.no/erik-o-sorensen-cv/
+- Shachar Kariv, https://eml.berkeley.edu//~kariv/
+- Alexander W. Cappelen, https://sites.google.com/view/alexander-w-cappelen/home
 

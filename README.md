@@ -4,7 +4,7 @@ Authors:
 
 - [William R. Zame](http://www.econ.ucla.edu/zame/)
 - [Bertil Tungodden](https://sites.google.com/view/bertiltungodden/home)
-- [Erik Ø. Sørensen](https://www.statsokonomen.no/erik-o-sorensen-cv/)
+- [Erik Ø. Sørensen](https://www.statsokonomen.no/erik-o-sorensen-cv/) [contact person for code and data, erik.sorensen@nhh.no]
 - [Shachar Kariv](https://eml.berkeley.edu//~kariv/)
 - [Alexander W. Cappelen](https://sites.google.com/view/alexander-w-cappelen/home)
 
@@ -23,84 +23,79 @@ these errors.
 
 ## Overview
 
-> INSTRUCTIONS: The typical README in social science journals serves the purpose of guiding a reader through the available material and a route to replicating the results in the research paper. Start by providing a brief overview of the available material and a brief guide as to how to proceed from beginning to end.
+The master file this replication package will:
 
-Example: The code in this replication package constructs the analysis file from the three data sources (Ruggles et al, 2018; Inglehart et al, 2019; BEA, 2016) using Stata and Julia. Two master files run all of the code to generate the data for the 15 figures and 3 tables in the paper. The replicator should expect the code to run for about 14 hours.
+1. Install the required versions of the necessary `R` packages from CRAN.
+2. Downloads the necessary datafile from Harvard Dataverse.
+3. Create all the displays in the paper as separate files (documented below).
+4. Create markdown documents for numbers referenced in the paper but not explicitly part of produced tables.
 
-## Data Availability and Provenance Statements
+On a powerful desktop computer, the replicator should expect the code to run for about 16 hours.
+
+## Data Availability
 
 The experimental data used to support the findings of this study were collected by the authors. All data, 
-with documentation, have been deposited in the public domain at  Dataverse:
+with documentation, have been deposited in the public domain at Harvard Dataverse:
 
 - Zame, William R.; Tungodden, Bertil; Sørensen, Erik Ø.; Kariv, Shachar; Cappelen, Alexander W., 2021, "Replication Data for: Linking Social and Personal Preferences: Theory and Experiment", https://doi.org/10.7910/DVN/LUF59R, Harvard Dataverse, V2.
 
 We certify that the author(s) of the manuscript have legitimate access to and permission to use the data used in this manuscript, and the data are licensed under a Creative Commons/CC0 license. See [LICENSE_CC0.txt](LICENSE_CC0.txt) for details.
 
-- The data file is downloaded when the `targets` plan is first run.
-
+The data file is downloaded when the `targets` plan is first run.
 
 
 ## Computational requirements
 
-> INSTRUCTIONS: In general, the specific computer code used to generate the results in the article will be within the repository that also contains this README. However, other computational requirements - shared libraries or code packages, required software, specific computing hardware - may be important, and is always useful, for the goal of replication. Some example text follows. 
-
-> INSTRUCTIONS: We strongly suggest providing setup scripts that install/set up the environment. Sample scripts for [Stata](https://github.com/gslab-econ/template/blob/master/config/config_stata.do),  [R](https://github.com/labordynamicsinstitute/paper-template/blob/master/programs/global-libraries.R),  [Python](https://pip.readthedocs.io/en/1.1/requirements.html), [Julia](https://github.com/labordynamicsinstitute/paper-template/blob/master/programs/packages.jl) are easy to set up and implement.
 
 ### Software Requirements
 
-> INSTRUCTIONS: List all of the software requirements, up to and including any operating system requirements, for the entire set of code. It is suggested to distribute most dependencies together with the replication package if allowed, in particular if sourced from unversioned code repositories, Github repos, and personal webpages. In all cases, list the version *you* used. 
 
 - R (code was last run with version 4.1.2)
   - `renv` (XX)
-  - The libraries and versions specified by the `renv.lock` file will be installed into a project specific library.
+  - The libraries and versions specified by the `renv.lock` file will be installed into a project specific library when the master file is run.
 
 ### Memory and Runtime Requirements
 
-> INSTRUCTIONS: Memory and compute-time requirements may also be relevant or even critical. Some example text follows. It may be useful to break this out by Table/Figure/section of processing. For instance, some estimation routines might run for weeks, but data prep and creating figures might only take a few minutes.
+Approximate time needed to reproduce the analyses on a (2021) desktop machine would be between 12 and 24 hours.
 
-#### Summary
+The code was last run on a Ubuntu 20.04.3 system, with an AMD Ryzen 9 3950X 16-Core Processor and 32 GB memory. 
 
-Approximate time needed to reproduce the analyses on a standard (CURRENT YEAR) desktop machine:
+With a less powerful system, it would be good to adjust the following line in `main.R`:
 
-- [ ] <10 minutes
-- [ ] 10-60 minutes
-- [X] 1-8 hours
-- [ ] 8-24 hours
-- [ ] 1-3 days
-- [ ] 3-14 days
-- [ ] > 14 days
-- [ ] Not feasible to run on a desktop machine, as described below.
+```
+tar_make_future(workers = 26)
+```
 
-#### Details
+The number of workers should not be larger than the number of threads the computer can comfortably run in parallel.
 
-The code was last run on a **4-core Intel-based laptop with MacOS version 10.14.4**. 
-
-Portions of the code were last run on a **32-core Intel server with 1024 GB of RAM, 12 TB of fast local storage**. Computation took 734 hours. 
-
-Portions of the code were last run on a **12-node AWS R3 cluster, consuming 20,000 core-hours**.  
-
-> INSTRUCTIONS: Identifiying hardware and OS can be obtained through a variety of ways:
-> Some of these details can be found as follows:
->
-> - (Windows) by right-clicking on "This PC" in File Explorer and choosing "Properties"
-> - (Mac) Apple-menu > "About this Mac"
-> - (Linux) see code in [tools/linux-system-info.sh](https://github.com/AEADataEditor/replication-template/blob/master/tools/linux-system-info.sh)`
 
 
 ## Description of programs/code
 
-> INSTRUCTIONS: Give a high-level overview of the program files and their purpose. Remove redundant/ obsolete files from the Replication archive.
+- `main.R`: Top level script to run and generate all outputs.
+- `_targets.R`: Specification of DAG for creating all outputs using Will Landau's `targets` package.
+- `renv.lock`: Specification of necessary libraries (and version) for running the code.
+- `functions.R`: Function definitions called by the targets defined in `_targets.R`.
 
-### (Optional, but recommended) License for Code
+The graphical displays are produced in the `graphs/` directory (as pdf-files).
+The other numbers and descriptions produced are part of the vignettes that are rendered in the `vignettes/` directory.
+
+### License for Code
 
 The code is licensed under a BSD-3-Clause license. See [LICENSE_BSD-3-Clause.txt](LICENSE_BSD-3-Clause.txt) for details.
 
 ## Instructions to Replicators
 
-> INSTRUCTIONS: The first two sections ensure that the data and software necessary to conduct the replication have been collected. This section then describes a human-readable instruction to conduct the replication. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
+From the command line, the replicator should run the `main.R` script:
 
+```
+Rscript main.R
+```
 
-
+The first time it is run, this will install a local library of R packages from CRAN, 
+download the data from Harvard Dataverse, and build all the targets specified in `_targets.R` 
+(a specification of a directed acyclic graph of dependencies for generating all
+necessary displays and descriptions). 
 
 ## List of tables and programs
 
@@ -124,6 +119,3 @@ The provided code reproduces:
 | Figure 2          | 02_analysis/fig2.do      |             | figure2.png                      ||
 | Figure 3          | 02_analysis/fig3.do      |             | figure-robustness.png            | Requires confidential data      |
 
-## References
-
-> INSTRUCTIONS: As in any scientific manuscript, you should have proper references. For instance, in this sample README, we cited "Ruggles et al, 2019" and "DESE, 2019" in a Data Availability Statement. The reference should thus be listed here, in the style of your journal:

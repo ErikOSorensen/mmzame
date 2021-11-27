@@ -23,7 +23,7 @@ tar_option_set(
 )
 
 NP_S = 10000
-N_STANDARD_BRONARS = 10000
+N_STANDARD_BRONARS = 100000
 SELFISH_REQUIREMENT = 0.05
 
 # End this file with a list of target objects.

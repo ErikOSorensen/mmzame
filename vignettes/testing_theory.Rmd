@@ -8,8 +8,6 @@ html_document:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#source(here::here("packages.R"))
-#source(here::here("functions.R"))
 tar_load(mmzame_decisions)
 ```
 
@@ -60,8 +58,8 @@ for (x in p3_00) {
     labs(x = "Afriat's CCEI", y = "Fraction", caption = caption)
   graph_list[[x$id]] <- g
   fname <- paste0("prop3_id_", x$id,".pdf")
-  ggsave(here("graphs", "prop3_tests", fname), 
-         plot = g, width=7.29, height = 4.5, units="in")
+#  ggsave(here("graphs", "prop3_tests", fname), 
+#         plot = g, width=7.29, height = 4.5, units="in")
 }
 ```
 
@@ -122,8 +120,8 @@ for (x in p4_00) {
     labs(x = "Afriat's CCEI", y = "Fraction", caption = caption)
   graph_list[[x$id]] <- g
   fname <- paste0("prop4_id_", x$id,".pdf")
-  ggsave(here("graphs", "prop4_tests", fname), 
-         plot = g, width=7.29, height = 4.5, units="in")
+#  ggsave(here("graphs", "prop4_tests", fname), 
+#         plot = g, width=7.29, height = 4.5, units="in")
 }
 ```
 

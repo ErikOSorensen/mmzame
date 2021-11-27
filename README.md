@@ -50,9 +50,13 @@ The data file is downloaded when the `targets` plan is first run.
 ### Software Requirements
 
 
-- R (code was last run with version 4.1.2)
-  - `renv` (XX)
-  - The libraries and versions specified by the `renv.lock` file will be installed into a project specific library when the master file is run.
+- `R` (code was last run with version 4.1.2)
+  - `renv` (0.14.0)
+    - system `curl` is a dependency of `renv`, should come with Windows 10 and Mac OSX, easily installable on linux.
+  - The libraries and versions specified by the `renv.lock` file will be installed into a project specific library when the master file is 
+  - `rmarkdown` will require system `pandoc`, which is easiest installed with `Rstudio`
+run.
+
 
 ### Memory and Runtime Requirements
 

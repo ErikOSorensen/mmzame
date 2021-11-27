@@ -15,8 +15,6 @@ This is to calculate the descriptives in the subsection on aggregate behavior in
 "Linking Social and Personal Preferences: Theory and Experiment" by William R. Zame, 
 Bertil Tungodden, Erik Ø. Sørensen, Shachar Kariv, and Alexander W. Cappelen. 
 
-Prepping of data is outlined in the drake file "plan.R". 
-
 # Distribution of choices in the *Social Choice* treatment
 
 Calculating the averages of $y/(x+y)$ in the social treatment, for all individuals,

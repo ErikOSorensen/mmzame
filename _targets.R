@@ -26,13 +26,17 @@ NP_S = 10000
 N_STANDARD_BRONARS = 100000
 SELFISH_REQUIREMENT = 0.05
 
-# End this file with a list of target objects.
+# Now for the id and server to download data from.
+DATA_FILE_ID = 5446287
+DATA_SERVER = "dataverse.harvard.edu"
 
+# End this file with a list of target objects.
 list(
-  tar_target(mmzame_decisions_file, here::here("data","mmzame_decisions.rds"), format="file"),
-  tar_target(mmzame_decisions_alltreatments, readRDS(mmzame_decisions_file) %>% 
+  tar_target(mmzame_decisions_alltreatments, dataverse::get_dataframe_by_id(DATA_FILE_ID, 
+                                                                            .f = readr::read_tsv, 
+                                                                            server = DATA_SERVER) %>%
                filter(id<200|id>300)),
-    tar_target(mmzame_decisions, mmzame_decisions_alltreatments %>%
+  tar_target(mmzame_decisions, mmzame_decisions_alltreatments %>%
                filter(treatment %in% c("moral", "risk", "dictator"))),
   tar_target(prop3list, prepare_decisions(mmzame_decisions, c("moral","risk"))),
   tar_target(prop4list, prepare_decisions(mmzame_decisions, c("moral","dictator"))),

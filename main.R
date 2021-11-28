@@ -1,6 +1,7 @@
 # This file will read the target specifications in _targets.R and 
 # generate all displays for the paper and the appendix -- and all
 # referenced numbers in the "vignette" directory. 
+renv::restore()
 source("_targets.R")
 
 

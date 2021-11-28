@@ -30,7 +30,7 @@ The master file this replication package will:
 3. Create all the displays in the paper as separate files (documented below).
 4. Create markdown documents for numbers referenced in the paper but not explicitly part of produced tables.
 
-On a powerful desktop computer, the replicator should expect the code to run for about 16 hours.
+On a powerful desktop computer, the replicator should expect the code to run for about 6 hours.
 
 ## Data Availability
 
@@ -59,7 +59,7 @@ The data file is downloaded when the `targets` plan is first run.
 
 ### Memory and Runtime Requirements
 
-Approximate time needed to reproduce all the analyses on a desktop machine (2021) would be between 12 and 24 hours.
+Approximate time needed to reproduce all the analyses on a desktop machine (2021) would be between 5 and 10 hours.
 
 The code was last run on a Ubuntu 20.04.3 system, with an AMD Ryzen 9 3950X 16-Core Processor and 32 GB memory. 
 Memory requirements are limited, at around 200 MB per worker node. 

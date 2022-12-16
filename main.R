@@ -13,4 +13,4 @@ source("_targets.R")
 
 # Set the number of workers to a number not larger than the number of threads
 # your computer can comfortably run in parallel.
-tar_make_future(workers = 26)
+tar_make_future(workers = 12)

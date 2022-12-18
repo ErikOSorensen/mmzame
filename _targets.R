@@ -1,6 +1,7 @@
 library(targets)
 library(tarchetypes)
 library(future)
+library(visNetwork)
 library(future.callr)
 future::plan(callr)
 source("functions.R")

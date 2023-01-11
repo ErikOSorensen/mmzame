@@ -1,0 +1,81 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Analysis code for "Linking Social and Personal
+  Preferences: Theory and Experiment"
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: William R.
+    family-names: Zame
+    email: zame@econ.ucla.edu
+    affiliation: 'University of California, Los Angeles'
+    orcid: 'https://orcid.org/0000-0002-3111-5842'
+  - given-names: Bertil
+    family-names: Tungodden
+    email: bertil.tungodden@nhh.no
+    affiliation: NHH Norwegian School of Economics
+    orcid: 'https://orcid.org/0000-0002-4182-8491'
+  - given-names: Erik Ø.
+    family-names: Sørensen
+    email: erik.sorensen@nhh.no
+    affiliation: NHH Norwegian School of Economics
+    orcid: 'https://orcid.org/0000-0002-7155-4188'
+  - given-names: Shachar
+    family-names: Kariv
+    email: kariv@berkeley.edu
+    affiliation: 'University of California, Berkeley'
+    orcid: 'https://orcid.org/0000-0002-1382-3917'
+  - given-names: Alexander W.
+    family-names: Cappelen
+    email: alexander.cappelen@nhh.no
+    affiliation: NHH Norwegian School of Economics
+    orcid: 'https://orcid.org/0000-0002-3489-7085'
+identifiers:
+  - type: doi
+    value: 10.7910/DVN/LUF59R
+    description: Contains the necessary data.
+abstract: >+
+  The attitudes of a Decision Maker toward riskless
+  and risky choices—both personal choices and social
+  choices—enter virtually every realm of individual
+  decision-making. This paper asks when it is
+  possible to link these attitudes. We provide a
+  simple formalization of this question and necessary
+  and sufficient conditions that such a link exists.
+
+
+  We also offer an experimental test of the theory in
+  which subjects were confronted with choices
+  (involving monetary outcomes) in three domains:
+  risky personal choices, riskless social choices and
+  risky social choices. Revealed preference tests
+  show that subject choices are generally consistent
+  with utility maximization within each choice domain
+  but frequently involve at least some errors. We
+  test for consistency across choice domains using a
+  novel nonparametric revealed preference test that
+  accounts for these errors.
+
+
+  The master file this replication package will:
+
+
+  1. Install the required versions of the necessary
+  `R` packages from CRAN.
+
+  2. Downloads the necessary datafile from Harvard
+  Dataverse.
+
+  3. Create all the displays in the paper as separate
+  files (documented below).
+
+  4. Create markdown documents for numbers referenced
+  in the paper but not explicitly part of produced
+  tables.
+
+license: BSD-3-Clause

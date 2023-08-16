@@ -26,7 +26,7 @@ tar_option_set(
 NP_S = 10000
 N_STANDARD_BRONARS = 100000
 SELFISH_REQUIREMENT = 0.05
-
+EPSILON = 0.0001
 # Now for the id and server to download data from.
 DATA_FILE_ID = 5446287
 DATA_SERVER = "dataverse.harvard.edu"

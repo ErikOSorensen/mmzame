@@ -10,7 +10,7 @@
 # very inconsistent individuals.
 # 
 # My idea is that it is fairly easy to add a binary search algorithm to 
-# calculate the CCEI on top of that. A default tolerance of 0.0001 shold be 
+# calculate the CCEI on top of that. A default tolerance of 0.0001 should be 
 # accurate enough for our purposes. 
 ccei <- function(x, p, tol = 1e-4, print.progress = FALSE) {
   if ( !checkGarp(x,p)$violation ) 
@@ -69,7 +69,7 @@ simulated_bronars <- function(x, p, respect_FOSD=FALSE) {
   data.frame(x=sx, y=sy)    # The prices do not change.
 }
 
-p_permutations_bronars <- function(decisions_individual, np = 10000, p_Bronars=0, rFOSD=FALSE) {
+p_permutations_bronars <- function(decisions_individual, np = 10000, p_Bronars=0, rFOSD=FALSE, epsilon=EPSILON) {
   # Arranged with n budget sets (sorted same way) for each of the two treatments being tested.
   id <- decisions_individual$id[1]
   n <- nrow(decisions_individual)/2
@@ -97,12 +97,12 @@ p_permutations_bronars <- function(decisions_individual, np = 10000, p_Bronars=0
        p_Bronars=p_Bronars)
 }
 
-ccei_p_value <- function(ccei1, ccei2, cceis_permuted) {
+ccei_p_value <- function(ccei1, ccei2, cceis_permuted, epsilon=EPSILON) {
   tmin <- min(ccei1, ccei2)
   tmax <- max(ccei1, ccei2)
   f <- ecdf(cceis_permuted)
-  p_min <- (1-f(tmin-0.00001))^2
-  p_max <- 1 - f(tmax-0.00001)^2
+  p_min <- (1-f(tmin-epsilon))^2
+  p_max <- 1 - f(tmax-epsilon)^2
   c(p_min, p_max)
 }
 
@@ -162,7 +162,7 @@ ccei_on_bronars_budgets_df <- function(df) {
   ccei(df_x, df_p)
 }
 
-p_symmetric <- function(decisions_df, np = 99) {
+p_symmetric <- function(decisions_df, np = 99, epsilon=EPSILON) {
   id <- decisions_df$id[1]
   n <- nrow(decisions_df)
   x <- decisions_df %>% 
@@ -171,9 +171,10 @@ p_symmetric <- function(decisions_df, np = 99) {
     select(px,py)
   ccei_actual <- ccei(x,p)
   cceis <- numeric(np) 
+  # Now creating (xm, pm), the mirrored dataset 
   xm <- decisions_df %>%
     mutate(xm = y, ym = x) %>% select(xm, ym) %>% rename(x = xm, y = ym)
-  pm <- decisions_df %>% # 
+  pm <- decisions_df %>% 
     mutate(pxm = py, pym = px) %>% select(pxm, pym) %>% rename(px=pxm, py=pym) 
   for (i in 1:np) {
     s <- (rbinom(n,1,0.5)==1)
@@ -186,7 +187,7 @@ p_symmetric <- function(decisions_df, np = 99) {
     cceis[i] <- ccei(xp,pp) 
   }
   f <- ecdf(cceis)
-  p_upper <- 1 - f(ccei_actual - 0.000001)
+  p_upper <- 1 - f(ccei_actual - epsilon)
   list(id=id, ccei=ccei_actual, cceis_permuted=cceis, 
        p = p_upper)
 }
@@ -299,7 +300,7 @@ make_CES_estimates <- function(dfs) {
     bind_rows()
 }
 
-p_permutationsK <- function(id, p_df, x_list, np = 99) {
+p_permutationsK <- function(id, p_df, x_list, np = 99, epsilon=EPSILON) {
   # Inputs should be 
   # id: id of individual
   # p_df: NxG dataframe of prices, (N choices, G goods). 
@@ -328,8 +329,8 @@ p_permutationsK <- function(id, p_df, x_list, np = 99) {
   tmin <- min(actual_cceis)
   tmax <- max(actual_cceis)
   f <- ecdf(permuted_cceis)
-  p_min <- (1 - f(tmin-0.00001))^K
-  p_max <- 1 - f(tmax-0.00001)^K
+  p_min <- (1 - f(tmin-epsilon))^K
+  p_max <- 1 - f(tmax-epsilon)^K
   c(p_min, p_max)
   list(id = id, ccei=actual_cceis, cceis_permuted = permuted_cceis,
        p_min =p_min, p_max=p_max, p_com = min( min(p_min,p_max)*2, 1))
@@ -368,3 +369,6 @@ calculate_3waytest <- function(data_3way_list, np=99) {
   }
   out
 }
+
+
+

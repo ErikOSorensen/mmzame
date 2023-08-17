@@ -194,6 +194,8 @@ ggsave(here::here("graphs","symmetry_3_treatments.pdf"), width = 16, height = 20
 As we should expect, symmetry is rejected for almost all in the "Social" domain, but for almost none
 in the "Personal Risk" and "Social risk" domains.
 
+Note that "symmetric" just means that the null-hypothesis of "symmetry" is not
+rejected. 
 
 ## How different is the non-parametric symmetry test from our simplified criterion?
 
@@ -236,7 +238,7 @@ individuals that are not very consistent to begin with (they seem
 to behave very randomly), and the nonparametric symmetry test has little power for 
 such participants.
 
-## Testing proposition 4 with alternative definition of symmetry
+## Testing proposition 4 with the alternative definition of symmetry
 
 We can also look at the test of proposition 4 (Social Choice and Social risk are the same 
 for the impartial / symmetric) for the subset for which we cannot reject
@@ -268,6 +270,8 @@ on average for which we cannot reject symmetry.
 # Equality of preferences - all combinations
 
 
+
+
 We discussed testing all three pairs of treatments, breaking the presentation
 down by the symmetric condition. First, merge all data label and merge with the
 proportion to self.
@@ -297,7 +301,7 @@ all_tests %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..
         caption="Binwidth: 0.05.")
 ```
 
-All cases, but for the symmetric/non-symmetric:
+All cases, but for the symmetric/non-symmetric (our simple criterion):
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 all_tests_symmetric <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
@@ -312,6 +316,25 @@ all_tests_symmetric %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL
         title = "Testing equality of preferences by symmetry (simple criterion)",
         caption="Binwidth: 0.05.")
 ```
+
+All cases, for the symmetric/non-symmetric with the non-parametric (Social Choice domain) definition:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+alternative_symmetric_subset <- sym1 |> filter(psymmetric>0.05) 
+all_tests_alternative_symmetric <- all_tests_symmetric |> 
+  mutate(alternative_symmetricf = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not symmetric")))
+
+all_tests_alternative_symmetric |> 
+ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  facet_grid(comparison~alternative_symmetricf) +
+  labs( y = "Fraction of participants",
+        x = "P-value on H0: Equality of preferences",
+        title = "Testing equality of preferences by symmetry (alternative criterion)",
+        caption="Binwidth: 0.05.")
+```
+
 
 
 
@@ -328,16 +351,21 @@ $e_1,e_2,\dots,e_K$, we can define $e^{+}=\max_k e_k$ and
 $e^{-} = \min_k e_k$ and the $p$-values can be calculated
 from a permutation distribution $\widehat{F}$ 
 as 
-$$\begin{align*} p_{e^{+}} &= P(\max_k e_k \geq e^{+}) \\
-&= 1 - \left(\lim_{\epsilon \uparrow 0}F(e^{+}-\epsilon)\right)^K \\
-&\approx 1-\left(\widehat{F}(e^{+}-\varepsilon)\right)^K,
+$$\begin{align*} p_{e^{+}} &= P(\max_k e_k \geq e^{+}), \\
+&= 1 - P(\max_k e_k < e^{+}), \\
+&= 1 - P(e_1 < e^{+}, e_2 < e^{+}, \dots, e_K < e^{+}), \\
+&= 1 - \left(P(e_1 < e^{+}) \cdot P(e_2< e^{+}) \cdot \ldots \cdot P(e_K<e^{+})\right),\\
+&= 1 - \left(\lim_{\epsilon \uparrow 0}F(e^{+}-\epsilon)\right)^K, \\
+&\approx 1-\left(\widehat{F}(e^{+}-\varepsilon)\right)^K.
 \end{align*}$$
 for a $\varepsilon$ chosen to be a number close to zero. 
 
 Similarly for the minimum statistic: 
-$$\begin{align*} p_{e^{-}} &= P(\min_k e_k \geq e^{-}) \\
-&= \left(1- \lim_{\epsilon\uparrow 0}F(e^{-}-\epsilon)\right)^K \\
-&\approx \left(1-\widehat{F}(e^{-}-\varepsilon)\right)^K,
+$$\begin{align*} p_{e^{-}} &= P(\min_k e_k \geq e^{-}), \\
+&= P(e_1\geq e^{-}, e_2\geq e^{-}, \dots, e_K\geq e^{-}), \\
+&= \left(1-P(e_1<e^{-})\right)\cdot\left(1-P(e_2<e^{-})\right)\cdot \ldots \cdot \left(1-P(e_K<e^{-})\right),\\
+&= \left(1- \lim_{\epsilon\uparrow 0}F(e^{-}-\epsilon)\right)^K, \\
+&\approx \left(1-\widehat{F}(e^{-}-\varepsilon)\right)^K.
 \end{align*}$$
 also for a small $\varepsilon$.
 
@@ -373,4 +401,42 @@ allp_df %>% ggplot(aes(x = p_com,
 
 For `r format(100*mean((allp_df$p_com<0.05)), digits=3)`% of the participants, we reject
 equality of preferences at the 5% level.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+allp_with_symmetry_df <- allp_df |> 
+  mutate(symmetric_alternativef = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not symmetric")))
+
+allp_with_symmetry_df |> ggplot(aes(x = p_com, 
+                       y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  labs(x = "P-value on H0: Equality of preferences",
+       y = "Fraction of participants",
+       title ="Testing equality across all 3 domains",
+       caption="Binwidth: 0.05. Alternative definition of symmetric.") +
+  theme(plot.title.position = "plot") +
+  facet_grid(. ~symmetric_alternativef)
+```
+
+
+Now with the simple definition of symmetric:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+symmetric_subset <- all_tests_symmetric |> filter(symmetric)
+allp_with_simple_symmetry_df <- allp_df |> 
+  mutate(symmetricf = factor(ifelse(id %in% symmetric_subset$id, "Symmetric", "Not symmetric")))
+allp_with_simple_symmetry_df |> ggplot(aes(x = p_com, 
+                       y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  labs(x = "P-value on H0: Equality of preferences",
+       y = "Fraction of participants",
+       title ="Testing equality across all 3 domains",
+       caption="Binwidth: 0.05. Simple definition of symmetric.") +
+  theme(plot.title.position = "plot") +
+  facet_grid(. ~symmetricf)
+
+```
+
+
 

@@ -150,21 +150,13 @@ Referee 3 brings up the question of *testing* for symmetry instead of the
 restriction on average share vs. the simple criterion we use (which is that the
 average share of tokens taken for self is $0.50\pm 0.05$).
 
-How to think about testing for symmetry? Two options stand out:
-
-1. Develop a non-parametric test for symmetry along the lines of our test for equality of preferences. This will be based on the fact that the mirror image of any actual budget set was equally likely as the realized
+How to think about testing for symmetry? 
+We develop a non-parametric test for symmetry along the lines of our test for equality of preferences. This will be based on the fact that the mirror image of any actual budget set was equally likely as the realized
 budget set, and that under the symmetry hypothesis, we know that the *choice* would have been the mirror
 image of the actual choice. So the realized choices and budgets is one out of $2^{50}$ possible combinations, and we can see if the realized CCEI is in the far right tail of this simulated CCEI-distribution, in which
 case we reject the null hypothesis of symmetry (so, a one-sided test). BTW: This seems a useful application of some general interest in itself, since we don't need to restrict the design of the original budget sets. 
 This creates a stochastic version of the symmetry test of Chambers and Rehbeck (Economics Letters 2018) that does not test symmetry **and** GARP. 
-2. Estimate a parametric model of preferences (such as the CES function in Section II.C of Fisman, Raymond, Shachar Kariv, and Daniel Markovits. 2007. "Individual Preferences for Giving." American Economic Review, 97 (5): 1858-1876.),
-$$
-U_s = \left[ \alpha  y^\rho + (1-\alpha) x^\rho \right]^{1/\rho}.
-$$ Can then test the hypothesis that $\alpha$ (weight on $y$, money for self) is equal to $1/2$. But this involves much more 
-parametric structure than we use in the rest of the paper and behavior is not linearly dependent on the CES parameters,
-making them a bit difficult to interpret.
 
-We concentrate on the first approach. 
 
 ## Non-parametric symmetry test: Distribution of p-values on "symmetry" in each domain
 For completeness, here is the distribution of "symmetry" p-values for all
@@ -199,7 +191,7 @@ rejected.
 
 ## How different is the non-parametric symmetry test from our simplified criterion?
 
-Our main criterion for symmetry is that the share of tokens for self in the
+Our main criterion for impartiality is that the share of tokens for self in the
 Social Choice environment is within  $0.5\pm 0.05$. To see how well
 these criteria agree, we plot the p-value from the non-parametric test vs the 
 average share of tokens taken from self. 
@@ -221,11 +213,31 @@ symmetric_evaluation %>% ggplot(aes(x=share_self, y=psymmetric)) +
   theme_minimal() + 
   labs(x="Mean share of tokens taken for self",
        y="P-value on H_0:symmetric",
-       title ="Simple criterion for symmetric/selfish vs. permutation test of symmetry",
-       caption ="Each marker represents one individual.\nThe light shaded area covers all the individuals classified as symmetric in the main paper.") +
+       title ="Simple criterion for impartiality  vs. permutation test of symmetry",
+       caption ="Each marker represents one individual.\nThe light shaded area covers all the individuals classified as impartial in the main paper.") +
   theme(plot.title.position = "plot") 
 ggsave(here::here("graphs","symmetrytest_vs_simplecriterion.pdf"), width = 16, height = 10, units = "cm")
 ```
+
+We can look at the overlap of the two dimensions. First extract
+the ids of those that we classified as impartials.
+```{r}
+impartials <- symmetric_evaluation$id[ symmetric_evaluation$share_self>0.45 & symmetric_evaluation$share_self<0.55]
+impartials
+symmetrics <- symmetric_evaluation$id[ symmetric_evaluation$psymmetric>0.05]
+symmetrics
+
+intersect(impartials, symmetrics)
+
+setdiff(impartials, symmetrics)
+setdiff(symmetrics, impartials)
+
+symmetric_evaluation |> filter(share_self>0.6 & psymmetric>0.05)
+
+```
+
+
+
 
 
 We see that for the most part, all selfish individuals (and the very generous)
@@ -267,14 +279,8 @@ the graph above that there are some participants that are fairly selfish
 on average for which we cannot reject symmetry.
 
 
-# Equality of preferences - all combinations
+# Referee 3, point 2.
 
-
-
-
-We discussed testing all three pairs of treatments, breaking the presentation
-down by the symmetric condition. First, merge all data label and merge with the
-proportion to self.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tar_load(p2_00)
@@ -291,31 +297,39 @@ prop4_ps <- map_dfr( p4_00, function(x) tibble(id=x$id, p= x$p_com, comparison="
 all_tests <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
   bind_rows() %>% left_join(self_shares) %>% mutate(selfish = (mean_share_self> 0.95),
                                                     selfishf = factor(ifelse(selfish,"Selfish","Not Selfish")))
-all_tests %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+R3_2 <- all_tests %>% 
+  filter(comparison == "Social R vs. P Risk") |>
+  ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
-  facet_grid(comparison~selfishf) +
+  facet_grid(. ~selfishf) +
   labs( y = "Fraction of participants",
         x = "P-value on H0: Equality of preferences",
-        title = "Testing equality of preferences by selfishness",
-        caption="Binwidth: 0.05.")
+        caption="Social Risk vs. Personal Risk. Binwidth: 0.05.")
+R3_2
+ggsave(here::here("graphs","R3_2.pdf"), width = 16, height = 10, units = "cm")
 ```
 
-All cases, but for the symmetric/non-symmetric (our simple criterion):
+# Referee 3, point 1: 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 all_tests_symmetric <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
   bind_rows() %>% left_join(self_shares) %>% mutate(symmetric = abs(mean_share_self-0.5)<0.05,
-                                                    symmetricf = factor(ifelse(symmetric,"Symmetric","Not symmetric")))
-all_tests_symmetric %>% ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+                                                    symmetricf = factor(ifelse(symmetric,"Impartial","Not Impartial")))
+R3_1 <- all_tests_symmetric %>% 
+  filter(comparison == "P Risk vs Social") |>
+  ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
-  facet_grid(comparison~symmetricf) +
+  facet_grid(.~symmetricf) +
   labs( y = "Fraction of participants",
         x = "P-value on H0: Equality of preferences",
-        title = "Testing equality of preferences by symmetry (simple criterion)",
-        caption="Binwidth: 0.05.")
+        caption="Personal Risk vs Social Choice. Binwidth: 0.05.")
+R3_1
+ggsave(here::here("graphs","R3_1.pdf"), width = 16, height = 10, units = "cm")
+
 ```
+
 
 All cases, for the symmetric/non-symmetric with the non-parametric (Social Choice domain) definition:
 
@@ -331,8 +345,8 @@ ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   facet_grid(comparison~alternative_symmetricf) +
   labs( y = "Fraction of participants",
         x = "P-value on H0: Equality of preferences",
-        title = "Testing equality of preferences by symmetry (alternative criterion)",
-        caption="Binwidth: 0.05.")
+        title = "Testing equality of preferences by symmetry",
+        caption="Binwidth: 0.05. Based on non-parametric test of symmetry.")
 ```
 
 
@@ -414,9 +428,10 @@ allp_with_symmetry_df |> ggplot(aes(x = p_com,
   labs(x = "P-value on H0: Equality of preferences",
        y = "Fraction of participants",
        title ="Testing equality across all 3 domains",
-       caption="Binwidth: 0.05. Alternative definition of symmetric.") +
+       caption="Binwidth: 0.05. Based on non-parametric test of symmetry.") +
   theme(plot.title.position = "plot") +
   facet_grid(. ~symmetric_alternativef)
+ggsave(here::here("graphs","equality_of_preferences.pdf"))
 ```
 
 
@@ -424,7 +439,7 @@ Now with the simple definition of symmetric:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 symmetric_subset <- all_tests_symmetric |> filter(symmetric)
 allp_with_simple_symmetry_df <- allp_df |> 
-  mutate(symmetricf = factor(ifelse(id %in% symmetric_subset$id, "Symmetric", "Not symmetric")))
+  mutate(symmetricf = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Not impartial")))
 allp_with_simple_symmetry_df |> ggplot(aes(x = p_com, 
                        y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
@@ -432,7 +447,7 @@ allp_with_simple_symmetry_df |> ggplot(aes(x = p_com,
   labs(x = "P-value on H0: Equality of preferences",
        y = "Fraction of participants",
        title ="Testing equality across all 3 domains",
-       caption="Binwidth: 0.05. Simple definition of symmetric.") +
+       caption="Binwidth: 0.05. Simple definition of impartial.") +
   theme(plot.title.position = "plot") +
   facet_grid(. ~symmetricf)
 

@@ -72,7 +72,7 @@ list(
   tar_target(pure_bronars, purrr::map_dbl(bronars_budgets, ccei_on_bronars_budgets_df)),
   tar_target(sym_moral, prepare_decisions(mmzame_decisions, c("moral"))),
   tar_target(sym_dict, prepare_decisions(mmzame_decisions, c("dictator"))),
-  tar_target(sym_risk, prepare_decisions(mmzame_decisions, c("moral"))),
+  tar_target(sym_risk, prepare_decisions(mmzame_decisions, c("risk"))),
   tar_target(symmetricp_dict, purrr::map(sym_dict, p_symmetric, np=NP_S)),
   tar_target(symmetricp_moral, purrr::map(sym_moral, p_symmetric, np=NP_S)),
   tar_target(symmetricp_risk, purrr::map(sym_risk, p_symmetric, np=NP_S)),

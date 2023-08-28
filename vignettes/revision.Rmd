@@ -347,6 +347,7 @@ ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
         x = "P-value on H0: Equality of preferences",
         title = "Testing equality of preferences by symmetry",
         caption="Binwidth: 0.05. Based on non-parametric test of symmetry.")
+ggsave(here::here("graphs","equality_by_symmetry_3domains.pdf"), width=16, height=20, units="cm")
 ```
 
 

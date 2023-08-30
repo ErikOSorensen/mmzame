@@ -166,20 +166,17 @@ individuals in all three domains:
 tar_load("symmetricp_dict")
 tar_load("symmetricp_moral")
 tar_load("symmetricp_risk")
-sym1 <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social") )
+sym1 <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social Choice") )
 sym2 <- symmetricp_moral %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social Risk") )
 sym3 <- symmetricp_risk %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Personal Risk") )
 symmetry_df <- list(sym1,sym2,sym3) %>% bind_rows() %>%
-  mutate(treatmentf = factor(treatment, levels=c("Social", "Personal Risk", "Social Risk")))
+  mutate(treatmentf = factor(treatment, levels=c("Social Choice", "Personal Risk", "Social Risk")))
 symmetry_df %>% ggplot(aes(x=psymmetric, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary = 0) +
   theme_minimal() +
-  labs(x="P-value on H0: symmetric", 
-       y="Fraction of participants",
-       title="Testing all participants for symmetry in each treatment",
-       caption="Each bar is 0.05 wide.") +
-  facet_wrap(.~treatmentf, dir="v") +
-  theme(plot.title.position = "plot")
+  labs(x="P-value on H0: Symmetry", 
+       y="Fraction of participants") +
+  facet_wrap(.~treatmentf, dir="v") 
 ggsave(here::here("graphs","symmetry_3_treatments.pdf"), width = 16, height = 20, units = "cm")
 ```
 
@@ -212,15 +209,12 @@ symmetric_evaluation %>% ggplot(aes(x=share_self, y=psymmetric)) +
     geom_point(alpha=0.25) +
   theme_minimal() + 
   labs(x="Mean share of tokens taken for self",
-       y="P-value on H_0:symmetric",
-       title ="Simple criterion for impartiality  vs. permutation test of symmetry",
-       caption ="Each marker represents one individual.\nThe light shaded area covers all the individuals classified as impartial in the main paper.") +
-  theme(plot.title.position = "plot") 
+       y="P-value on H0: Symmetry in Social Choice")
 ggsave(here::here("graphs","symmetrytest_vs_simplecriterion.pdf"), width = 16, height = 10, units = "cm")
 ```
 
 We can look at the overlap of the two dimensions. First extract
-the ids of those that we classified as impartials.
+the ids of those that we classified as impartial.
 ```{r}
 impartials <- symmetric_evaluation$id[ symmetric_evaluation$share_self>0.45 & symmetric_evaluation$share_self<0.55]
 impartials
@@ -250,33 +244,6 @@ individuals that are not very consistent to begin with (they seem
 to behave very randomly), and the nonparametric symmetry test has little power for 
 such participants.
 
-## Testing proposition 4 with the alternative definition of symmetry
-
-We can also look at the test of proposition 4 (Social Choice and Social risk are the same 
-for the impartial / symmetric) for the subset for which we cannot reject
-symmetry (p-value 5% and above).
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-symmetric_individuals <- symmetric_evaluation |> filter(psymmetric>=0.05)
-p4_on_alternative_symmetric <- p4_00 |> map_df( function(x) tibble(id = x$id, p_prop4 = x$p_com) ) |>
-  filter(id %in% symmetric_individuals$id) 
-p4_on_alternative_symmetric |> summarize( share_reject_p4 = mean(p_prop4<0.05),
-                                          n = n()) |> gt::gt()
-p4_on_alternative_symmetric |>
-  ggplot(aes(x=p_prop4, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
-  geom_histogram(binwidth=0.05, boundary=0) +
-  theme_minimal() + 
-  theme(plot.title.position = "plot") +
-  labs(x = "P-value on Proposition 4 (Social Choice = Social Risk)",
-       y = "Proportion",
-       title="Testing Proposition 4 on an alternative definition of symmetric subset")
-```
-
-We see again that the number of people for which symmetry cannot be rejected
-is larger than the $0.5\pm 0.05$ criterion gave us (33 vs 19). The rejection
-rate is also slightly higher, this is not surprising since we saw in 
-the graph above that there are some participants that are fairly selfish
-on average for which we cannot reject symmetry.
 
 
 # Referee 3, point 2.
@@ -291,21 +258,21 @@ self_shares <- mmzame_decisions %>%
   mutate(share_self = y/(x+y)) %>%
   group_by(id) %>%
   summarize(mean_share_self = mean(share_self))
-prop3_ps <- map_dfr( p3_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Social R vs. P Risk")) 
-prop2_ps <- map_dfr( p2_00, function(x) tibble(id=x$id, p= x$p_com, comparison="P Risk vs Social")) 
-prop4_ps <- map_dfr( p4_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Social R vs. Social")) 
+prop3_ps <- map_dfr( p3_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Social Risk vs. Personal Risk")) 
+prop2_ps <- map_dfr( p2_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Personal Risk vs. Social Choice")) 
+prop4_ps <- map_dfr( p4_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Social Risk vs. Social Choice")) 
 all_tests <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
   bind_rows() %>% left_join(self_shares) %>% mutate(selfish = (mean_share_self> 0.95),
-                                                    selfishf = factor(ifelse(selfish,"Selfish","Not Selfish")))
+                                                    selfishf = factor(ifelse(selfish,"Selfish","Not Selfish"), levels=c("Selfish", "Not Selfish")),
+                                                    impartialf = factor(ifelse(abs(mean_share_self-0.5)<0.05, "Impartial", "Not Impartial"), levels=c("Impartial", "Not Impartial")))
 R3_2 <- all_tests %>% 
-  filter(comparison == "Social R vs. P Risk") |>
+  filter(comparison == "Social Risk vs. Personal Risk") |>
   ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
   facet_grid(. ~selfishf) +
   labs( y = "Fraction of participants",
-        x = "P-value on H0: Equality of preferences",
-        caption="Social Risk vs. Personal Risk. Binwidth: 0.05.")
+        x = "P-value on H0: Equality of preferences")
 R3_2
 ggsave(here::here("graphs","R3_2.pdf"), width = 16, height = 10, units = "cm")
 ```
@@ -317,14 +284,13 @@ all_tests_symmetric <- list(prop3_ps, prop2_ps, prop4_ps) %>%
   bind_rows() %>% left_join(self_shares) %>% mutate(symmetric = abs(mean_share_self-0.5)<0.05,
                                                     symmetricf = factor(ifelse(symmetric,"Impartial","Not Impartial")))
 R3_1 <- all_tests_symmetric %>% 
-  filter(comparison == "P Risk vs Social") |>
+  filter(comparison == "Personal Risk vs. Social Choice") |>
   ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
   facet_grid(.~symmetricf) +
   labs( y = "Fraction of participants",
-        x = "P-value on H0: Equality of preferences",
-        caption="Personal Risk vs Social Choice. Binwidth: 0.05.")
+        x = "P-value on H0: Equality of preferences")
 R3_1
 ggsave(here::here("graphs","R3_1.pdf"), width = 16, height = 10, units = "cm")
 
@@ -334,9 +300,11 @@ ggsave(here::here("graphs","R3_1.pdf"), width = 16, height = 10, units = "cm")
 All cases, for the symmetric/non-symmetric with the non-parametric (Social Choice domain) definition:
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+
 alternative_symmetric_subset <- sym1 |> filter(psymmetric>0.05) 
 all_tests_alternative_symmetric <- all_tests_symmetric |> 
-  mutate(alternative_symmetricf = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not symmetric")))
+  mutate(alternative_symmetricf = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not Symmetric"), 
+                                         levels=c("Symmetric", "Not Symmetric")))
 
 all_tests_alternative_symmetric |> 
 ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
@@ -344,10 +312,23 @@ ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   theme_minimal() +
   facet_grid(comparison~alternative_symmetricf) +
   labs( y = "Fraction of participants",
-        x = "P-value on H0: Equality of preferences",
-        title = "Testing equality of preferences by symmetry",
-        caption="Binwidth: 0.05. Based on non-parametric test of symmetry.")
+        x = "P-value on H0: Equality of preferences")
 ggsave(here::here("graphs","equality_by_symmetry_3domains.pdf"), width=16, height=20, units="cm")
+
+
+
+```
+
+Now the same graph, but with the paper's impartial definition.
+```{r}
+all_tests |> 
+ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  facet_grid(comparison~impartialf) +
+  labs( y = "Fraction of participants",
+        x = "P-value on H0: Equality of preferences")
+ggsave(here::here("graphs","equality_by_symmetry_3domains_impartial.pdf"), width=16, height=20, units="cm")
 ```
 
 
@@ -402,37 +383,19 @@ allp_df <- pall_domains %>% map(function(X)
   bind_rows()
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-allp_df %>% ggplot(aes(x = p_com, 
-                       y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
-  geom_histogram(binwidth=0.05, boundary=0) +
-  theme_minimal() +
-  labs(x = "P-value on H0: Equality of preferences",
-       y = "Fraction of participants",
-       title ="Testing equality across all 3 domains",
-       caption="Binwidth: 0.05.") +
-  theme(plot.title.position = "plot")
-```
-
-For `r format(100*mean((allp_df$p_com<0.05)), digits=3)`% of the participants, we reject
-equality of preferences at the 5% level.
-
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 allp_with_symmetry_df <- allp_df |> 
-  mutate(symmetric_alternativef = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not symmetric")))
+  mutate(symmetric_alternativef = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not Symmetric"), levels=c("Symmetric","Not Symmetric")))
 
 allp_with_symmetry_df |> ggplot(aes(x = p_com, 
                        y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
   labs(x = "P-value on H0: Equality of preferences",
-       y = "Fraction of participants",
-       title ="Testing equality across all 3 domains",
-       caption="Binwidth: 0.05. Based on non-parametric test of symmetry.") +
-  theme(plot.title.position = "plot") +
+       y = "Fraction of participants") +
   facet_grid(. ~symmetric_alternativef)
-ggsave(here::here("graphs","equality_of_preferences.pdf"))
+ggsave(here::here("graphs","equality_of_preferences.pdf"), width=16, height=10, unit = "cm")
 ```
 
 
@@ -440,17 +403,15 @@ Now with the simple definition of symmetric:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 symmetric_subset <- all_tests_symmetric |> filter(symmetric)
 allp_with_simple_symmetry_df <- allp_df |> 
-  mutate(symmetricf = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Not impartial")))
+  mutate(impartial = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Not Impartial"), levels=c("Impartial", "Not Impartial")))
 allp_with_simple_symmetry_df |> ggplot(aes(x = p_com, 
                        y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
   theme_minimal() +
   labs(x = "P-value on H0: Equality of preferences",
-       y = "Fraction of participants",
-       title ="Testing equality across all 3 domains",
-       caption="Binwidth: 0.05. Simple definition of impartial.") +
-  theme(plot.title.position = "plot") +
-  facet_grid(. ~symmetricf)
+       y = "Fraction of participants") +
+  facet_grid(. ~impartial)
+ggsave(here::here("graphs","equality_of_preferences_impartial.pdf"), width=16, height=10, unit="cm")
 
 ```
 

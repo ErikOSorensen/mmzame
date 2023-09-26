@@ -416,4 +416,22 @@ ggsave(here::here("graphs","equality_of_preferences_impartial.pdf"), width=16, h
 ```
 
 
+## All individuals, broken down by selfishness
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+all_tests_selfish <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
+  bind_rows() %>% left_join(self_shares) %>% mutate(selfish = mean_share_self>0.95,
+                                                    selfishf = factor(ifelse(selfish,"Selfish","Not Selfish"), levels=c("Not Selfish", "Selfish")))
+all_comparisons_selfish <- all_tests_selfish %>% 
+  ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  facet_grid(comparison~selfishf) +
+  labs( y = "Fraction of participants",
+        x = "P-value on H0: Equality of preferences")
+all_comparisons_selfish
+ggsave(here::here("graphs","all_comparisons_selfish.pdf"), width = 16, height = 20, units = "cm")
+```
+
 

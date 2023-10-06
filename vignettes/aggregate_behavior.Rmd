@@ -155,7 +155,7 @@ bar_data |>
   facet_grid(.~treatmentf) +
   labs(x = "Share of tokens",
        y = "Fraction")
-ggsave(here::here("graphs","aggregate_choices.pdf"))
+ggsave(here::here("graphs","aggregate_choices.pdf"), width=16, height=10, units="cm")
 ```
 
 

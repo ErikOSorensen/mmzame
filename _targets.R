@@ -29,13 +29,18 @@ SELFISH_REQUIREMENT = 0.05
 EPSILON = 0.0001
 # Now for the id and server to download data from.
 DATA_FILE_ID = 5446287
+BACKGROUND_FILE_ID = 5446286
 DATA_SERVER = "dataverse.harvard.edu"
 
 # End this file with a list of target objects.
 list(
   tar_target(mmzame_decisions_alltreatments, dataverse::get_dataframe_by_id(DATA_FILE_ID, 
                                                                             .f = readr::read_tsv, 
-                                                                            server = DATA_SERVER) %>%
+                                                                            server = DATA_SERVER) |>
+               filter(id<200|id>300)),
+  tar_target(mmzame_background, dataverse::get_dataframe_by_id(BACKGROUND_FILE_ID,
+                                                               .f = readr::read_tsv,
+                                                               server = DATA_SERVER) |>
                filter(id<200|id>300)),
   tar_target(mmzame_decisions, mmzame_decisions_alltreatments %>%
                filter(treatment %in% c("moral", "risk", "dictator"))),
@@ -82,6 +87,7 @@ list(
   tar_render(Bindividual_behavior, here::here("vignettes","individual_behavior.Rmd")),
   tar_render(Ctesting_rationality, here::here("vignettes","testing_rationality.Rmd")),
   tar_render(Dtesting_theory, here::here("vignettes", "testing_theory.Rmd")),
-  tar_render(Revision, here::here("vignettes","revision.Rmd"))
+  tar_render(Revision, here::here("vignettes","revision.Rmd")),
+  tar_render(TableA1, here::here("vignettes","background_table.Rmd"))
 )
 

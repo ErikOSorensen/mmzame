@@ -1,0 +1,55 @@
+---
+title: "Background table"
+author: "Erik Ø. Sørensen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gt)
+library(targets)
+source(here::here("functions.R"))
+```
+
+```{r}
+tar_load(mmzame_background)
+tbl <- background_table(mmzame_background)
+descriptive_table <- tbl |> gt::gt() |> 
+  tab_spanner(label = "Statistics", columns=c(mean,sd)) |>
+  tab_spanner(label = "Non-response ($n$)", columns=n_missing) |> 
+  fmt_number(
+    c(mean, sd),
+    rows = c(1),
+    decimals=1
+  ) |>
+  fmt_number(
+    c(mean, sd),
+    rows = c(4),
+    decimals=2
+  ) |>
+  fmt_number(
+    c(mean,sd),
+    rows = c(2,3,7,8,9,10,11,12,13,14),
+    decimals=3
+  ) |>
+  fmt_number(
+    c(mean,sd),
+    rows = c(5,14),
+    decimals = 0
+  ) |>
+  fmt_number(
+    c(n_missing), 
+    rows = everything(),
+    decimals = 0
+  ) |> 
+fmt_missing(
+    everything(),
+    rows = everything(),
+    missing_text = "") 
+descriptive_table
+descriptive_table |> as_latex() |> cat(file = here::here("tables", "TableA1.tex"))
+```
+
+

@@ -370,5 +370,23 @@ calculate_3waytest <- function(data_3way_list, np=99) {
   out
 }
 
-
+background_table <- function(df) {
+  tbl <- dplyr::tribble(~description, ~mean, ~sd, ~n_missing,
+         "Age (in years)", mean(df$age), sd(df$age), sum(is.na(df$age)),
+         "Gender (male)", mean(df$sex==1), sd(df$sex==1), sum(is.na(df$sex)),
+         "Business school", mean(df$place==2), sd(df$place==2), sum(is.na(df$place)),
+         "Political view (left-right)", mean(df$politicalview, na.rm=TRUE), sd(df$politicalview, na.rm=TRUE), sum(is.na(df$politicalview)),
+         "Yearly expenditures (in 1000 NOK)", mean(df$expenditures, na.rm=TRUE), sd(df$expenditures, na.rm=TRUE), sum(is.na(df$expenditures)),
+         "Parental income (categories in 1000 NOK)",NA,NA, sum(is.na(df$parentalincome)), 
+         "  0--250", mean(df$parentalincome==125, na.rm=TRUE), sd(df$parentalincome==125, na.rm=TRUE), NA,
+         "  250--500", mean(df$parentalincome==375, na.rm=TRUE), sd(df$parentalincome==375, na.rm=TRUE), NA,
+         "  500--750", mean(df$parentalincome==625, na.rm=TRUE), sd(df$parentalincome==625, na.rm=TRUE), NA,
+         "  750--1000", mean(df$parentalincome==875, na.rm=TRUE), sd(df$parentalincome==875, na.rm=TRUE), NA,
+         "  1000--1250", mean(df$parentalincome==1125, na.rm=TRUE), sd(df$parentalincome==1125, na.rm=TRUE), NA,
+         "  1250--1500", mean(df$parentalincome==1375, na.rm=TRUE), sd(df$parentalincome==1375, na.rm=TRUE), NA,
+         "  1500+", mean(df$parentalincome==2000, na.rm=TRUE), sd(df$parentalincome==2000, na.rm=TRUE), NA,
+         " Number of observations" , nrow(df), NA, NA)
+  
+  tbl
+}
 

@@ -48,6 +48,24 @@ ccei_df %>% group_by(domain) %>%
   knitr::kable(digits=3)
 ```
 
+For the people we use in table 4:
+```{r}
+ccei_df |> filter(id %in% c(511,635,317,645))
+```
+
+The average distribution of min and max CCEI (of the Social Risk and Private Risk).
+
+```{r}
+ccei_df |> filter(domain != "Social Choice") |>
+  group_by(id) |>
+  summarize(minCCEI = min(ccei),
+            maxCCEI = max(ccei)) |>
+  summarize(mean_minCCEI = mean(minCCEI),
+            mean_maxCCEI = mean(maxCCEI))
+```
+
+
+
 ## CCEI - distribution by domain
 Now we want to cut the CCEIs into groups and plot grouped bar charts
 to show the distribution.

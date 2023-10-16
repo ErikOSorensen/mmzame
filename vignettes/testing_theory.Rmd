@@ -93,6 +93,14 @@ prop3 %>% mutate(sign10 = p_com<0.1,
             n_sign01 = sum(sign01))
 ```
 
+
+For the people we use in table 4:
+```{r}
+prop3 |> filter(id %in% c(511,635,317,645))
+```
+
+
+
 # Testing proposition 4
 The same graphs for testing proposition 4 is available, but intended for an online appendix only.
 

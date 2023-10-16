@@ -434,4 +434,25 @@ all_comparisons_selfish
 ggsave(here::here("graphs","all_comparisons_selfish.pdf"), width = 16, height = 20, units = "cm")
 ```
 
+## The subsets testing propositions
+```{r}
+allp2 <- all_tests_selfish |> filter(selfish==TRUE, comparison == "Social Risk vs. Personal Risk" ) |>
+  ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  labs( y = "Fraction of participants",
+        x = "P-value on H0: Equality of preferences",
+        title = "Proposition 2")
+allp3 <- all_tests_selfish |>  
+  mutate(impartial = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Not Impartial"), 
+                            levels=c("Impartial", "Not Impartial"))) |>
+  filter(impartial=="Impartial", comparison == "Social Risk vs. Social Choice") |>
+  ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  labs( y = "Fraction of participants",
+        x = "P-value on H0: Equality of preferences",
+        title = "Proposition 3")
 
+allp2 + allp3 +   plot_annotation(tag_levels = "a")
+```

@@ -454,6 +454,6 @@ allp3 <- all_tests_selfish |>
         x = "P-value on H0: Equality of preferences",
         title = "Proposition 3")
 
-allp2 + allp3 +   plot_annotation(tag_levels = "a")
+allp2 + allp3 +   plot_annotation(tag_levels = "A")
 ggsave(here::here("graphs","p_values_tests.pdf"), width=16, height=10, units="cm")
 ```

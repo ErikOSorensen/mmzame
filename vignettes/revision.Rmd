@@ -455,4 +455,5 @@ allp3 <- all_tests_selfish |>
         title = "Proposition 3")
 
 allp2 + allp3 +   plot_annotation(tag_levels = "a")
+ggsave(here::here("graphs","p_values_tests.pdf"), width=16, height=10, units="cm")
 ```

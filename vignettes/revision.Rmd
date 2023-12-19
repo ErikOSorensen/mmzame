@@ -263,8 +263,8 @@ prop2_ps <- map_dfr( p2_00, function(x) tibble(id=x$id, p= x$p_com, comparison="
 prop4_ps <- map_dfr( p4_00, function(x) tibble(id=x$id, p= x$p_com, comparison="Social Risk vs. Social Choice")) 
 all_tests <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
   bind_rows() %>% left_join(self_shares) %>% mutate(selfish = (mean_share_self> 0.95),
-                                                    selfishf = factor(ifelse(selfish,"Selfish","Not Selfish"), levels=c("Selfish", "Not Selfish")),
-                                                    impartialf = factor(ifelse(abs(mean_share_self-0.5)<0.05, "Impartial", "Not Impartial"), levels=c("Impartial", "Not Impartial")))
+                                                    selfishf = factor(ifelse(selfish,"Selfish","Non-selfish"), levels=c("Selfish", "Non-selfish")),
+                                                    impartialf = factor(ifelse(abs(mean_share_self-0.5)<0.05, "Impartial", "Non-impartial"), levels=c("Impartial", "Non-impartial")))
 R3_2 <- all_tests %>% 
   filter(comparison == "Social Risk vs. Personal Risk") |>
   ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
@@ -282,7 +282,7 @@ ggsave(here::here("graphs","R3_2.pdf"), width = 16, height = 10, units = "cm")
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 all_tests_symmetric <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
   bind_rows() %>% left_join(self_shares) %>% mutate(symmetric = abs(mean_share_self-0.5)<0.05,
-                                                    symmetricf = factor(ifelse(symmetric,"Impartial","Not Impartial")))
+                                                    symmetricf = factor(ifelse(symmetric,"Impartial","Non-impartial")))
 R3_1 <- all_tests_symmetric %>% 
   filter(comparison == "Personal Risk vs. Social Choice") |>
   ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
@@ -403,7 +403,7 @@ Now with the simple definition of symmetric:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 symmetric_subset <- all_tests_symmetric |> filter(symmetric)
 allp_with_simple_symmetry_df <- allp_df |> 
-  mutate(impartial = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Not Impartial"), levels=c("Impartial", "Not Impartial")))
+  mutate(impartial = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Non-impartial"), levels=c("Impartial", "Non-impartial")))
 allp_with_simple_symmetry_df |> ggplot(aes(x = p_com, 
                        y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
   geom_histogram(binwidth=0.05, boundary=0) +
@@ -422,7 +422,7 @@ ggsave(here::here("graphs","equality_of_preferences_impartial.pdf"), width=16, h
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 all_tests_selfish <- list(prop3_ps, prop2_ps, prop4_ps) %>% 
   bind_rows() %>% left_join(self_shares) %>% mutate(selfish = mean_share_self>0.95,
-                                                    selfishf = factor(ifelse(selfish,"Selfish","Not Selfish"), levels=c("Not Selfish", "Selfish")))
+                                                    selfishf = factor(ifelse(selfish,"Selfish","Non-selfish"), levels=c("Non-selfish", "Selfish")))
 all_comparisons_selfish <- all_tests_selfish %>% 
   ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +
@@ -444,8 +444,8 @@ allp2 <- all_tests_selfish |> filter(selfish==TRUE, comparison == "Social Risk v
         x = "P-value on H0: Equality of preferences",
         title = "Proposition 2")
 allp3 <- all_tests_selfish |>  
-  mutate(impartial = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Not Impartial"), 
-                            levels=c("Impartial", "Not Impartial"))) |>
+  mutate(impartial = factor(ifelse(id %in% symmetric_subset$id, "Impartial", "Non-impartial"), 
+                            levels=c("Impartial", "Non-impartial"))) |>
   filter(impartial=="Impartial", comparison == "Social Risk vs. Social Choice") |>
   ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
   geom_histogram(binwidth=0.05, boundary=0) +

@@ -303,8 +303,8 @@ All cases, for the symmetric/non-symmetric with the non-parametric (Social Choic
 
 alternative_symmetric_subset <- sym1 |> filter(psymmetric>0.05) 
 all_tests_alternative_symmetric <- all_tests_symmetric |> 
-  mutate(alternative_symmetricf = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not Symmetric"), 
-                                         levels=c("Symmetric", "Not Symmetric")))
+  mutate(alternative_symmetricf = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Non-symmetric"), 
+                                         levels=c("Symmetric", "Non-symmetric")))
 
 all_tests_alternative_symmetric |> 
 ggplot(aes(x=p, y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
@@ -386,7 +386,7 @@ allp_df <- pall_domains %>% map(function(X)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 allp_with_symmetry_df <- allp_df |> 
-  mutate(symmetric_alternativef = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Not Symmetric"), levels=c("Symmetric","Not Symmetric")))
+  mutate(symmetric_alternativef = factor(ifelse(id %in% alternative_symmetric_subset$id, "Symmetric", "Non-symmetric"), levels=c("Symmetric","Non-symmetric")))
 
 allp_with_symmetry_df |> ggplot(aes(x = p_com, 
                        y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 

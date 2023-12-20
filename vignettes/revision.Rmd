@@ -399,7 +399,7 @@ ggsave(here::here("graphs","equality_of_preferences.pdf"), width=16, height=10, 
 ```
 
 
-Now with the simple definition of symmetric:
+Now with the simple definition of impartial:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 symmetric_subset <- all_tests_symmetric |> filter(symmetric)
 allp_with_simple_symmetry_df <- allp_df |> 
@@ -412,6 +412,24 @@ allp_with_simple_symmetry_df |> ggplot(aes(x = p_com,
        y = "Fraction of participants") +
   facet_grid(. ~impartial)
 ggsave(here::here("graphs","equality_of_preferences_impartial.pdf"), width=16, height=10, unit="cm")
+
+```
+
+And also for selfishness:
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tar_load(selfish)
+allp_with_selfish_df <- allp_df |> 
+  mutate(selfish = factor(ifelse(id %in% selfish$id, "Selfish", "Non-selfish"), levels=c("Selfish", "Non-selfish")))
+allp_with_selfish_df |> ggplot(aes(x = p_com, 
+                       y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram(binwidth=0.05, boundary=0) +
+  theme_minimal() +
+  labs(x = "P-value on H0: Equality of preferences",
+       y = "Fraction of participants") +
+  facet_grid(. ~selfish)
+ggsave(here::here("graphs","equality_of_preferences_selfish.pdf"), width=16, height=10, unit="cm")
 
 ```
 

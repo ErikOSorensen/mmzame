@@ -6,3 +6,4 @@ _targets/
 .config/
 .local/
 .cache/
+.bash*

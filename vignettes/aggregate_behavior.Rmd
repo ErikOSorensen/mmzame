@@ -38,7 +38,7 @@ type_table / sum(type_table)
 
 How many were even more selfless? 
 ```{r}
-average_social_decisions %>% filter(mean_yshare<0.45) %>%
+average_social_decisions %>% filter(mean_yshare<0.5) %>%
   arrange(mean_yshare)
 ```
 
@@ -87,9 +87,15 @@ How many are in the extreme groups?
 ```{r}
 average_symmetric_decisions %>%
   mutate(more_than_95p = (mean_cheapest > 0.95),
-         less_than_55p = (mean_cheapest < 0.55)) %>% 
-  group_by(treatmentf, more_than_95p, less_than_55p) %>%
+         less_than_55p = (mean_cheapest < 0.55),
+         less_than_50p = (mean_cheapest < 0.5)) %>% 
+  group_by(treatmentf, more_than_95p, less_than_55p, less_than_50p) %>%
   summarize(n = n()) %>% knitr::kable()
+```
+
+
+```{r}
+average_symmetric_decisions |> filter(mean_cheapest<0.5)
 ```
 
 # Variant graph with all treatments

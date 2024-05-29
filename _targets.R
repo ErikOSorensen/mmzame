@@ -88,6 +88,7 @@ list(
   tar_render(Ctesting_rationality, here::here("vignettes","testing_rationality.Rmd")),
   tar_render(Dtesting_theory, here::here("vignettes", "testing_theory.Rmd")),
   tar_render(Revision, here::here("vignettes","revision.Rmd")),
-  tar_render(TableA1, here::here("vignettes","background_table.Rmd"))
+  tar_render(TableA1, here::here("vignettes","background_table.Rmd")),
+  tar_render(long_table, here::here("vignettes","long_table_individuals.Rmd"))
 )
 

@@ -1,0 +1,105 @@
+---
+title: "Long table with different group classifications"
+author: "Erik Ø. Sørensen"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("targets")
+library("tidyverse")
+library("revealedPrefs")
+tar_load(mmzame_decisions)
+tar_load(p3_00)
+tar_load(p4_00)
+tar_load(p2_00)
+tar_load(pall_domains)
+```
+
+
+## Extracting all p-values from everyone
+
+```{r}
+p_from_list <- function(x) {
+  data.frame(id = x$id, p = x$p_com)
+}
+allp3 <- map(p3_00, p_from_list) |> bind_rows() |> mutate(tst="SRISK = PRISK")
+allp4 <- map(p4_00, p_from_list) |> bind_rows() |> mutate(tst="SRISK = SOCIAL")
+allp2 <- map(p2_00, p_from_list) |> bind_rows() |> mutate(tst="SOCIAL = PRISK")
+alld <- map(pall_domains, p_from_list) |> bind_rows() |> mutate(tst="ALL DOMAINS")
+
+p_values <- list(allp3, allp4, allp2, alld) |> 
+  bind_rows()  |>
+  mutate(reject = as.numeric(p<0.05)) |>
+  pivot_wider(id_cols="id", names_from="tst", values_from=c(p,reject))
+```
+
+
+## Different categorizations
+
+```{r}
+shares <- mmzame_decisions |> 
+  filter(treatment=="dictator") |>
+  group_by(id) |>
+  summarize( mean_self = mean(y/(y+x))) |>
+  mutate(selfish95 = as.numeric(mean_self>0.95),
+         selfish90 = as.numeric(mean_self>0.90),
+         impartial05 = as.numeric( abs(mean_self - 0.5) < 0.05),
+         impartial10 = as.numeric( abs(mean_self - 0.5) < 0.10)) 
+```
+
+
+We have the statistical test of symmetry in the social risk domain.
+
+```{r}
+tar_load(symmetricp_dict)
+stochastic_symmetric <- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |> 
+  bind_rows() |> 
+  mutate(stochastic_symmetricp = p,
+         stochastic_symmetricd = as.numeric(p>0.05)) |>
+  select(c(id, stochastic_symmetricp, stochastic_symmetricd))
+```
+
+A new way of classification is a non-stochastic variant of the symmetry test.
+First, calculate CCEI on the original data (n=50). Then concatenate this with the
+symmetric data, for a total of n=100. Run the CCEI on the long data, which will
+not be larger than the short CCEI. If the long CCEI / short CCEI > 0.95 
+(Varian's cutoff), we say that there is symmetry. 
+
+
+```{r}
+tar_load(sym_dict)
+CCEI_nonstochastic <- purrr::map(sym_dict, p_symmetric_nonstochastic) |> 
+  bind_rows() |>
+  mutate(CCEI_nonstochastic_sym = as.numeric( (sym_long / sym_short)>0.95)) |>
+  select(c(id, CCEI_nonstochastic_sym))
+```
+
+
+
+## Putting things together
+
+```{r}
+all <- shares |> 
+  left_join(p_values) |> 
+  left_join(stochastic_symmetric) |>
+  left_join(CCEI_nonstochastic) |>
+  select( c("id",
+            "selfish95","selfish90",
+            "impartial05","impartial10",
+            "stochastic_symmetricd", "CCEI_nonstochastic_sym",
+            "reject_SRISK = PRISK", "reject_SRISK = SOCIAL", "reject_SOCIAL = PRISK", "reject_ALL DOMAINS",
+            "p_SRISK = PRISK", "p_SRISK = SOCIAL", "p_SOCIAL = PRISK", "p_ALL DOMAINS"))
+```
+
+Outputting to a spreadsheet:
+
+```{r}
+write_excel_csv(all, here::here("tables", "longtable.csv"))
+```
+
+
+
+
+

@@ -1,4 +1,3 @@
-
 # Julian Boelaert has created the R package [revealedPrefs](http://cran.r-project.org/web/packages/revealedPrefs/index.html) 
 # which, among other things,
 # calculate a test for whether a data set is consistent with GARP. All the
@@ -191,6 +190,28 @@ p_symmetric <- function(decisions_df, np = 99, epsilon=EPSILON) {
   list(id=id, ccei=ccei_actual, cceis_permuted=cceis, 
        p = p_upper)
 }
+
+p_symmetric_nonstochastic <- function(decisions_df) {
+  # To be run on decisions from a single individual.
+  id <- decisions_df$id[1]
+  n <- nrow(decisions_df)
+  x <- decisions_df |> 
+    select(x,y)
+  p <- decisions_df |>
+    select(px,py)
+  ccei_actual <- ccei(x,p) # This is the short CCEI.
+  # Now, creating mirror data.
+  xm <- decisions_df |>
+    mutate(xm = y, ym = x) |> select(xm, ym) |> rename(x = xm, y = ym) 
+  pm <- decisions_df |>
+    mutate(pxm = py, pym = px) |> select(pxm, pym) |> rename(px=pxm, py=pym) 
+  # Concatenating data
+  long_x <- x |> bind_rows(xm)
+  long_p <- p |> bind_rows(pm)
+  ccei_long <- ccei(long_x, long_p)
+  data.frame(id = id, sym_short = ccei_actual, sym_long = ccei_long)
+}
+
 
 cesinv <- function(x) {
   ta <- x[['ta']]

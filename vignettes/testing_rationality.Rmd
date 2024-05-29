@@ -143,3 +143,7 @@ df %>% ggplot(aes(x=ccei_group, y=fraction, group=outcome, fill=outcome)) +
 ggsave(here("graphs", "empirical_cceis_and_Bronars.pdf"))
 ```
 
+```{r}
+df |> filter(ccei_group == "(0.9,1]")
+```
+

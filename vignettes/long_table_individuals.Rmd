@@ -43,7 +43,8 @@ shares <- mmzame_decisions |>
   filter(treatment=="dictator") |>
   group_by(id) |>
   summarize( mean_self = mean(y/(y+x))) |>
-  mutate(selfish95 = as.numeric(mean_self>0.95),
+  mutate(selfish975 = as.numeric(mean_self>0.975),
+         selfish95 = as.numeric(mean_self>0.95),
          selfish90 = as.numeric(mean_self>0.90),
          impartial05 = as.numeric( abs(mean_self - 0.5) < 0.05),
          impartial10 = as.numeric( abs(mean_self - 0.5) < 0.10)) 
@@ -57,8 +58,10 @@ tar_load(symmetricp_dict)
 stochastic_symmetric <- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |> 
   bind_rows() |> 
   mutate(stochastic_symmetricp = p,
-         stochastic_symmetricd = as.numeric(p>0.05)) |>
-  select(c(id, stochastic_symmetricp, stochastic_symmetricd))
+         stochastic_symmetricd05 = as.numeric(p>0.05),
+         stochastic_symmetricd01 = as.numeric(p>0.01),
+         stochastic_symmetricd10 = as.numeric(p>0.10)) |>
+  select(c(id, stochastic_symmetricp, stochastic_symmetricd01, stochastic_symmetricd05, stochastic_symmetricd10))
 ```
 
 A new way of classification is a non-stochastic variant of the symmetry test.
@@ -72,8 +75,9 @@ not be larger than the short CCEI. If the long CCEI / short CCEI > 0.95
 tar_load(sym_dict)
 CCEI_nonstochastic <- purrr::map(sym_dict, p_symmetric_nonstochastic) |> 
   bind_rows() |>
-  mutate(CCEI_nonstochastic_sym = as.numeric( (sym_long / sym_short)>0.95)) |>
-  select(c(id, CCEI_nonstochastic_sym))
+  mutate(CCEI_nonstochastic_sym95 = as.numeric( (sym_long / sym_short)>0.95),
+         CCEI_nonstochastic_sym90 = as.numeric( (sym_long / sym_short)>0.90)) |>
+  select(c(id, CCEI_nonstochastic_sym90, CCEI_nonstochastic_sym95))
 ```
 
 
@@ -88,7 +92,9 @@ all <- shares |>
   select( c("id",
             "selfish95","selfish90",
             "impartial05","impartial10",
-            "stochastic_symmetricd", "CCEI_nonstochastic_sym",
+            "stochastic_symmetricd01", "stochastic_symmetricd05", "stochastic_symmetricd10",
+            "CCEI_nonstochastic_sym90", "CCEI_nonstochastic_sym95",
+
             "reject_SRISK = PRISK", "reject_SRISK = SOCIAL", "reject_SOCIAL = PRISK", "reject_ALL DOMAINS",
             "p_SRISK = PRISK", "p_SRISK = SOCIAL", "p_SOCIAL = PRISK", "p_ALL DOMAINS"))
 ```

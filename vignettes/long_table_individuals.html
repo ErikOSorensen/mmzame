@@ -11,7 +11,7 @@
 
 <meta name="author" content="Erik Ø. Sørensen" />
 
-<meta name="date" content="2024-05-29" />
+<meta name="date" content="2024-05-30" />
 
 <title>Long table with different group classifications</title>
 
@@ -353,7 +353,7 @@ display: none;
 <h1 class="title toc-ignore">Long table with different group
 classifications</h1>
 <h4 class="author">Erik Ø. Sørensen</h4>
-<h4 class="date">2024-05-29</h4>
+<h4 class="date">2024-05-30</h4>
 
 </div>
 
@@ -379,7 +379,8 @@ p_values &lt;- list(allp3, allp4, allp2, alld) |&gt;
   filter(treatment==&quot;dictator&quot;) |&gt;
   group_by(id) |&gt;
   summarize( mean_self = mean(y/(y+x))) |&gt;
-  mutate(selfish95 = as.numeric(mean_self&gt;0.95),
+  mutate(selfish975 = as.numeric(mean_self&gt;0.975),
+         selfish95 = as.numeric(mean_self&gt;0.95),
          selfish90 = as.numeric(mean_self&gt;0.90),
          impartial05 = as.numeric( abs(mean_self - 0.5) &lt; 0.05),
          impartial10 = as.numeric( abs(mean_self - 0.5) &lt; 0.10)) </code></pre>
@@ -389,8 +390,10 @@ domain.</p>
 stochastic_symmetric &lt;- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |&gt; 
   bind_rows() |&gt; 
   mutate(stochastic_symmetricp = p,
-         stochastic_symmetricd = as.numeric(p&gt;0.05)) |&gt;
-  select(c(id, stochastic_symmetricp, stochastic_symmetricd))</code></pre>
+         stochastic_symmetricd05 = as.numeric(p&gt;0.05),
+         stochastic_symmetricd01 = as.numeric(p&gt;0.01),
+         stochastic_symmetricd10 = as.numeric(p&gt;0.10)) |&gt;
+  select(c(id, stochastic_symmetricp, stochastic_symmetricd01, stochastic_symmetricd05, stochastic_symmetricd10))</code></pre>
 <p>A new way of classification is a non-stochastic variant of the
 symmetry test. First, calculate CCEI on the original data (n=50). Then
 concatenate this with the symmetric data, for a total of n=100. Run the
@@ -400,8 +403,9 @@ there is symmetry.</p>
 <pre class="r"><code>tar_load(sym_dict)
 CCEI_nonstochastic &lt;- purrr::map(sym_dict, p_symmetric_nonstochastic) |&gt; 
   bind_rows() |&gt;
-  mutate(CCEI_nonstochastic_sym = as.numeric( (sym_long / sym_short)&gt;0.95)) |&gt;
-  select(c(id, CCEI_nonstochastic_sym))</code></pre>
+  mutate(CCEI_nonstochastic_sym95 = as.numeric( (sym_long / sym_short)&gt;0.95),
+         CCEI_nonstochastic_sym90 = as.numeric( (sym_long / sym_short)&gt;0.90)) |&gt;
+  select(c(id, CCEI_nonstochastic_sym90, CCEI_nonstochastic_sym95))</code></pre>
 </div>
 <div id="putting-things-together" class="section level2">
 <h2>Putting things together</h2>
@@ -412,7 +416,9 @@ CCEI_nonstochastic &lt;- purrr::map(sym_dict, p_symmetric_nonstochastic) |&gt;
   select( c(&quot;id&quot;,
             &quot;selfish95&quot;,&quot;selfish90&quot;,
             &quot;impartial05&quot;,&quot;impartial10&quot;,
-            &quot;stochastic_symmetricd&quot;, &quot;CCEI_nonstochastic_sym&quot;,
+            &quot;stochastic_symmetricd01&quot;, &quot;stochastic_symmetricd05&quot;, &quot;stochastic_symmetricd10&quot;,
+            &quot;CCEI_nonstochastic_sym90&quot;, &quot;CCEI_nonstochastic_sym95&quot;,
+
             &quot;reject_SRISK = PRISK&quot;, &quot;reject_SRISK = SOCIAL&quot;, &quot;reject_SOCIAL = PRISK&quot;, &quot;reject_ALL DOMAINS&quot;,
             &quot;p_SRISK = PRISK&quot;, &quot;p_SRISK = SOCIAL&quot;, &quot;p_SOCIAL = PRISK&quot;, &quot;p_ALL DOMAINS&quot;))</code></pre>
 <pre><code>## Joining with `by = join_by(id)`

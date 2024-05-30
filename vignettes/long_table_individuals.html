@@ -379,7 +379,8 @@ p_values &lt;- list(allp3, allp4, allp2, alld) |&gt;
   filter(treatment==&quot;dictator&quot;) |&gt;
   group_by(id) |&gt;
   summarize( mean_self = mean(y/(y+x))) |&gt;
-  mutate(selfish975 = as.numeric(mean_self&gt;0.975),
+  mutate(selfish99 = as.numeric(mean_self&gt;0.99),
+         selfish975 = as.numeric(mean_self&gt;0.975),
          selfish95 = as.numeric(mean_self&gt;0.95),
          selfish90 = as.numeric(mean_self&gt;0.90),
          impartial05 = as.numeric( abs(mean_self - 0.5) &lt; 0.05),
@@ -412,7 +413,7 @@ there is symmetry.</p>
   left_join(stochastic_symmetric) |&gt;
   left_join(CCEI_nonstochastic) |&gt;
   select( c(&quot;id&quot;,
-            &quot;selfish95&quot;,&quot;selfish90&quot;,
+            &quot;selfish99&quot;, &quot;selfish975&quot;,&quot;selfish95&quot;,&quot;selfish90&quot;,
             &quot;impartial05&quot;,&quot;impartial10&quot;,
             &quot;stochastic_symmetricd01&quot;, &quot;stochastic_symmetricd05&quot;, &quot;stochastic_symmetricd10&quot;,
             &quot;CCEI_nonstochastic_sym90&quot;, &quot;CCEI_nonstochastic_sym95&quot;,

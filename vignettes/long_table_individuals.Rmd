@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 library("targets")
 library("tidyverse")
 library("revealedPrefs")
@@ -15,6 +16,8 @@ tar_load(p3_00)
 tar_load(p4_00)
 tar_load(p2_00)
 tar_load(pall_domains)
+tar_load(symmetricp_dict)
+tar_load(sym_dict)
 ```
 
 
@@ -54,7 +57,6 @@ shares <- mmzame_decisions |>
 We have the statistical test of symmetry in the social risk domain.
 
 ```{r}
-tar_load(symmetricp_dict)
 stochastic_symmetric <- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |> 
   bind_rows() |> 
   mutate(stochastic_symmetricp = p,
@@ -72,7 +74,6 @@ not be larger than the short CCEI. If the long CCEI / short CCEI > 0.95
 
 
 ```{r}
-tar_load(sym_dict)
 CCEI_nonstochastic <- purrr::map(sym_dict, p_symmetric_nonstochastic) |> 
   bind_rows() |>
   mutate(CCEI_nonstochastic_sym95 = as.numeric( (sym_long / sym_short)>0.95),
@@ -94,7 +95,6 @@ all <- shares |>
             "impartial05","impartial10",
             "stochastic_symmetricd01", "stochastic_symmetricd05", "stochastic_symmetricd10",
             "CCEI_nonstochastic_sym90", "CCEI_nonstochastic_sym95",
-
             "reject_SRISK = PRISK", "reject_SRISK = SOCIAL", "reject_SOCIAL = PRISK", "reject_ALL DOMAINS",
             "p_SRISK = PRISK", "p_SRISK = SOCIAL", "p_SOCIAL = PRISK", "p_ALL DOMAINS"))
 ```

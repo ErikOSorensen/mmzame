@@ -386,8 +386,7 @@ p_values &lt;- list(allp3, allp4, allp2, alld) |&gt;
          impartial10 = as.numeric( abs(mean_self - 0.5) &lt; 0.10)) </code></pre>
 <p>We have the statistical test of symmetry in the social risk
 domain.</p>
-<pre class="r"><code>tar_load(symmetricp_dict)
-stochastic_symmetric &lt;- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |&gt; 
+<pre class="r"><code>stochastic_symmetric &lt;- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |&gt; 
   bind_rows() |&gt; 
   mutate(stochastic_symmetricp = p,
          stochastic_symmetricd05 = as.numeric(p&gt;0.05),
@@ -400,8 +399,7 @@ concatenate this with the symmetric data, for a total of n=100. Run the
 CCEI on the long data, which will not be larger than the short CCEI. If
 the long CCEI / short CCEI &gt; 0.95 (Varian’s cutoff), we say that
 there is symmetry.</p>
-<pre class="r"><code>tar_load(sym_dict)
-CCEI_nonstochastic &lt;- purrr::map(sym_dict, p_symmetric_nonstochastic) |&gt; 
+<pre class="r"><code>CCEI_nonstochastic &lt;- purrr::map(sym_dict, p_symmetric_nonstochastic) |&gt; 
   bind_rows() |&gt;
   mutate(CCEI_nonstochastic_sym95 = as.numeric( (sym_long / sym_short)&gt;0.95),
          CCEI_nonstochastic_sym90 = as.numeric( (sym_long / sym_short)&gt;0.90)) |&gt;
@@ -418,7 +416,6 @@ CCEI_nonstochastic &lt;- purrr::map(sym_dict, p_symmetric_nonstochastic) |&gt;
             &quot;impartial05&quot;,&quot;impartial10&quot;,
             &quot;stochastic_symmetricd01&quot;, &quot;stochastic_symmetricd05&quot;, &quot;stochastic_symmetricd10&quot;,
             &quot;CCEI_nonstochastic_sym90&quot;, &quot;CCEI_nonstochastic_sym95&quot;,
-
             &quot;reject_SRISK = PRISK&quot;, &quot;reject_SRISK = SOCIAL&quot;, &quot;reject_SOCIAL = PRISK&quot;, &quot;reject_ALL DOMAINS&quot;,
             &quot;p_SRISK = PRISK&quot;, &quot;p_SRISK = SOCIAL&quot;, &quot;p_SOCIAL = PRISK&quot;, &quot;p_ALL DOMAINS&quot;))</code></pre>
 <pre><code>## Joining with `by = join_by(id)`

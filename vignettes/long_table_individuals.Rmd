@@ -50,6 +50,7 @@ shares <- mmzame_decisions |>
          selfish975 = as.numeric(mean_self>0.975),
          selfish95 = as.numeric(mean_self>0.95),
          selfish90 = as.numeric(mean_self>0.90),
+         selfish75 = as.numeric(mean_self>0.75),
          impartial05 = as.numeric( abs(mean_self - 0.5) < 0.05),
          impartial10 = as.numeric( abs(mean_self - 0.5) < 0.10)) 
 ```
@@ -92,7 +93,7 @@ all <- shares |>
   left_join(stochastic_symmetric) |>
   left_join(CCEI_nonstochastic) |>
   select( c("id",
-            "selfish99", "selfish975","selfish95","selfish90",
+            "selfish99", "selfish975","selfish95","selfish90","selfish75",
             "impartial05","impartial10",
             "stochastic_symmetricd01", "stochastic_symmetricd05", "stochastic_symmetricd10",
             "CCEI_nonstochastic_sym90", "CCEI_nonstochastic_sym95",

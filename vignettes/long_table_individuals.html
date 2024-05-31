@@ -11,7 +11,7 @@
 
 <meta name="author" content="Erik Ø. Sørensen" />
 
-<meta name="date" content="2024-05-30" />
+<meta name="date" content="2024-05-31" />
 
 <title>Long table with different group classifications</title>
 
@@ -353,7 +353,7 @@ display: none;
 <h1 class="title toc-ignore">Long table with different group
 classifications</h1>
 <h4 class="author">Erik Ø. Sørensen</h4>
-<h4 class="date">2024-05-30</h4>
+<h4 class="date">2024-05-31</h4>
 
 </div>
 
@@ -383,6 +383,7 @@ p_values &lt;- list(allp3, allp4, allp2, alld) |&gt;
          selfish975 = as.numeric(mean_self&gt;0.975),
          selfish95 = as.numeric(mean_self&gt;0.95),
          selfish90 = as.numeric(mean_self&gt;0.90),
+         selfish75 = as.numeric(mean_self&gt;0.75),
          impartial05 = as.numeric( abs(mean_self - 0.5) &lt; 0.05),
          impartial10 = as.numeric( abs(mean_self - 0.5) &lt; 0.10)) </code></pre>
 <p>We have the statistical test of symmetry in the social risk
@@ -413,7 +414,7 @@ there is symmetry.</p>
   left_join(stochastic_symmetric) |&gt;
   left_join(CCEI_nonstochastic) |&gt;
   select( c(&quot;id&quot;,
-            &quot;selfish99&quot;, &quot;selfish975&quot;,&quot;selfish95&quot;,&quot;selfish90&quot;,
+            &quot;selfish99&quot;, &quot;selfish975&quot;,&quot;selfish95&quot;,&quot;selfish90&quot;,&quot;selfish75&quot;,
             &quot;impartial05&quot;,&quot;impartial10&quot;,
             &quot;stochastic_symmetricd01&quot;, &quot;stochastic_symmetricd05&quot;, &quot;stochastic_symmetricd10&quot;,
             &quot;CCEI_nonstochastic_sym90&quot;, &quot;CCEI_nonstochastic_sym95&quot;,

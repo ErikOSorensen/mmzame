@@ -11,13 +11,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library("targets")
 library("tidyverse")
 library("revealedPrefs")
-tar_load(mmzame_decisions)
-tar_load(p3_00)
-tar_load(p4_00)
-tar_load(p2_00)
-tar_load(pall_domains)
-tar_load(symmetricp_dict)
-tar_load(sym_dict)
+library("gt")
+tar_load(mmzame_decisions, store = here::here("_targets"))
+tar_load(p3_00, store = here::here("_targets"))
+tar_load(p4_00, store = here::here("_targets"))
+tar_load(p2_00, store = here::here("_targets"))
+tar_load(pall_domains, store = here::here("_targets"))
+tar_load(symmetricp_dict, store = here::here("_targets"))
+tar_load(sym_dict, store = here::here("_targets"))
 ```
 
 
@@ -107,7 +108,123 @@ Outputting to a spreadsheet:
 write_excel_csv(all, here::here("tables", "longtable.csv"))
 ```
 
+Now, trying to put together a table with the outputs. I want to piece it 
+together by groups of 4 columns (with optional counts), conditional on 
+a partition of individuals, and conditional on a significance level. I also 
+want to have an optional "header" column with number of observations.
 
+```{r}
+main_section <- function(df, partition, alpha, ns=FALSE) {
+  pvar <- sym(partition)
+  cnames <- c("p_SRISK = PRISK", "p_SRISK = SOCIAL", "p_SOCIAL = PRISK", "p_ALL DOMAINS")
+  content <- df |> dplyr::select(c(!!pvar, cnames)) |>
+    group_by(!!pvar) |>
+    summarize_at(vars(-group_cols()), function(x) { mean(x < alpha) }) |>
+    arrange(-!!pvar) |>
+    select(-!!pvar) |> as.matrix()
+  if (ns) {
+    n0 <- df |> filter(!!pvar==0) |> count() |> as.numeric()
+    n1 <- df |> filter(!!pvar==1) |> count() |> as.numeric()
+    nm <- as.matrix(c(n1,n0), nrow=2, ncol=1)
+    content <- cbind(nm, content)
+  }
+  content
+}
+```
+
+
+A full (two-row) line of data consists in three calls (for different significance levels) of this.
+
+```{r}
+main_row <- function(df, partition) {
+  m1 <- main_section(df, partition, 0.01, ns=TRUE) |> as.data.frame()
+  m2 <- main_section(df, partition, 0.05) |> as.data.frame()
+  m3 <- main_section(df, partition, 0.1) |> as.data.frame()
+  colnames(m1) <- c("n","p1_1","p2_1","p3_1","p4_1")
+  colnames(m2) <- c("p1_5","p2_5","p3_5","p4_5")
+  colnames(m3) <- c("p1_10","p2_10","p3_10","p4_10")
+  cbind(m1,m2,m3)
+}
+```
+
+Now, a table can be made for a vector of partitions:
+```{r}
+repeat_with_empty <- function(v) {
+  new_v <- character(length(v) * 2)  # Create a character vector of double length, initialized with empty strings
+  new_v[seq(1, length(new_v), by = 2)] <- v  # Assign original elements to every other position
+  return(new_v)
+}
+main_rows <- function(df, partitions) {
+  myf <- function(p) { main_row(df, p) }
+  newdf <- purrr::map_dfr(partitions, myf) 
+  cbind(repeat_with_empty(partitions), newdf)
+}
+```
+
+Create all the numerical rows:
+
+```{r}
+ps <- c("selfish99","selfish975","selfish95","selfish90", "impartial05","stochastic_symmetricd10","stochastic_symmetricd05","stochastic_symmetricd01")
+all_numrows <- main_rows(all, ps)
+```
+
+
+
+## Creating the output table
+
+```{r}
+tbl <- all_numrows |> 
+  gt() |>
+  fmt_number(columns = 3:14,
+             decimals = 3) |>
+    tab_spanner(
+    label = "1% significance level",
+    columns = 3:6
+  ) |>
+  tab_spanner(
+    label = "5% significance level",
+    columns = 7:10
+  ) |>
+  tab_spanner(
+    label = "10% significance level",
+    columns = 11:14
+  ) |>
+  cols_label(
+    `repeat_with_empty(partitions)` = "Partition",
+    p1_1 = "(1)",
+    p2_1 = "(2)",
+    p3_1 = "(3)",
+    p4_1 = "(4)",
+    p1_5 = "(1)",
+    p2_5 = "(2)",
+    p3_5 = "(3)",
+    p4_5 = "(4)",
+    p1_10 = "(1)",
+    p2_10 = "(2)",
+    p3_10 = "(3)",
+    p4_10 = "(4)"
+    ) |>
+  tab_style(
+    style = list(
+      cell_text(weight="bold")
+    ),
+    locations = cells_body(
+      columns = c(3,7,11),
+      rows = c(1,3,5,7)
+    )
+  ) |>
+    tab_style(
+    style = list(
+      cell_text(weight="bold")
+    ),
+    locations = cells_body(
+      columns = c(4,8,12),
+      rows = c(9,11,13,15)
+    )
+  )
+tbl
+tbl |> gtsave(filename = here::here("tables", "main_table.tex"), to = "latex")
+```
 
 
 

@@ -15,7 +15,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 #source(here::here("packages.R"))
 #source(here::here("functions.R"))
-tar_load(mmzame_decisions)
+tar_load(mmzame_decisions, store = here::here("_targets"))
 ```
 
 This document is structured to answer the concerns of the referees with
@@ -46,7 +46,7 @@ sequence) and similarly the share allocated to the cheapest asset in the
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # To implement, first create a data set with the individual orders of treatments and
 # join to decisions:
-tar_load(mmzame_decisions_alltreatments)
+tar_load(mmzame_decisions_alltreatments, store = here::here("_targets"))
 sequence <- mmzame_decisions_alltreatments %>% 
   filter(round==1) %>%
   pivot_wider(id_cols = id, names_from = treatment, values_from = phase, names_prefix = "seq_")
@@ -68,8 +68,8 @@ Social Choice choices.
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # loading the key test datasets and merge them to the sequence data:
 
-tar_load("p3_00")
-tar_load("selfish")
+tar_load("p3_00", store = here::here("_targets"))
+tar_load("selfish", store = here::here("_targets"))
 prop3_ps <- map_dfr( keep(p3_00, function(x) (x$id %in% selfish$id)),
                      function(x) tibble(id=x$id, p= x$p_com)) 
 prop3_ordered <- ordered_means %>% 
@@ -77,8 +77,8 @@ prop3_ordered <- ordered_means %>%
   right_join(prop3_ps) %>% 
   mutate(observer_at_end = ifelse( (DRO_order %in% c("2,3,4","3,2,4","4,2,3")), "Observer choices at end", "Observer choices in between"))
 
-tar_load("p4_00")
-tar_load("symmetric")
+tar_load("p4_00", store = here::here("_targets"))
+tar_load("symmetric", store = here::here("_targets"))
 prop4_ps <- map_dfr( keep(p4_00, function(x) (x$id %in% symmetric$id)),
                      function(x) tibble(id=x$id, p= x$p_com)) 
 prop4_ordered <- ordered_means %>% 
@@ -163,9 +163,9 @@ For completeness, here is the distribution of "symmetry" p-values for all
 individuals in all three domains:
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tar_load("symmetricp_dict")
-tar_load("symmetricp_moral")
-tar_load("symmetricp_risk")
+tar_load("symmetricp_dict", store = here::here("_targets"))
+tar_load("symmetricp_moral", store = here::here("_targets"))
+tar_load("symmetricp_risk", store = here::here("_targets"))
 sym1 <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social Choice") )
 sym2 <- symmetricp_moral %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Social Risk") )
 sym3 <- symmetricp_risk %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p, treatment="Personal Risk") )
@@ -186,6 +186,24 @@ in the "Personal Risk" and "Social risk" domains.
 Note that "symmetric" just means that the null-hypothesis of "symmetry" is not
 rejected. 
 
+The same information in tabular form:
+
+```{r}
+list(sym1, sym2, sym3) |> 
+  bind_rows() |>
+  mutate(significant_symmetry01 = psymmetric < 0.01,
+         significant_symmetry05 = psymmetric < 0.05,
+         significant_symmetry10 = psymmetric < 0.10) |>
+  group_by(treatment) |>
+  summarize(share_symmetry01 = mean(significant_symmetry01),
+            share_symmetry05 = mean(significant_symmetry05),
+            share_symmetry10 = mean(significant_symmetry10)) |>
+  gt::gt() |> gt::fmt_number(decimals=3) |>
+  gt::tab_spanner("Proportion which we reject symmetry for", columns=2:4)
+```
+
+
+
 ## How different is the non-parametric symmetry test from our simplified criterion?
 
 Our main criterion for impartiality is that the share of tokens for self in the
@@ -194,7 +212,7 @@ these criteria agree, we plot the p-value from the non-parametric test vs the
 average share of tokens taken from self. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tar_load("symmetricp_dict")
+tar_load("symmetricp_dict", store = here::here("_targets"))
 symmetricp_df <- symmetricp_dict %>% map_df( function(x) tibble(id = x$id, psymmetric = x$p) )
 symmetric_evaluation <- mmzame_decisions %>% filter(treatment=="dictator") %>% 
   mutate(yshare = y/(x+y)) %>%
@@ -250,9 +268,9 @@ such participants.
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tar_load(p2_00)
-tar_load(p3_00)
-tar_load(p4_00)
+tar_load(p2_00, store = here::here("_targets"))
+tar_load(p3_00, store = here::here("_targets"))
+tar_load(p4_00, store = here::here("_targets"))
 self_shares <- mmzame_decisions %>% 
   filter(treatment=="dictator") %>%
   mutate(share_self = y/(x+y)) %>%
@@ -377,7 +395,7 @@ that preferences are the same in all of the three domains: Social, Social Risk, 
 The data comes in the form of a list (keeping all the permuted CCEI values), so
 they need to be extracted to form a data frame for graphing.
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tar_load("pall_domains")
+tar_load("pall_domains", store = here::here("_targets"))
 allp_df <- pall_domains %>% map(function(X) 
   tibble(id=X$id, p_min=X$p_min, p_max=X$p_max, p_com = X$p_com)) %>%
   bind_rows()
@@ -419,7 +437,7 @@ And also for selfishness:
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-tar_load(selfish)
+tar_load(selfish, store = here::here("_targets"))
 allp_with_selfish_df <- allp_df |> 
   mutate(selfish = factor(ifelse(id %in% selfish$id, "Selfish", "Non-selfish"), levels=c("Selfish", "Non-selfish")))
 allp_with_selfish_df |> ggplot(aes(x = p_com, 

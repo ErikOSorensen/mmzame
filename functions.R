@@ -411,3 +411,19 @@ background_table <- function(df) {
   tbl
 }
 
+create_mirrored_decisions <- function(df) {
+  # From a dataset with all decisions, add the mirrored decisions
+  dfm <- df
+  dfm <- dfm |> mutate( maxx_ = maxx,
+                 maxy_ = maxy,
+                 x_ = x,
+                 y_ = y,
+                 bset = 100 + bset,
+                 y = x_,
+                 x = y_,
+                 maxx = maxy_,
+                 maxy = maxx_) |>
+    select(-c(maxx_, maxy_, x_, y_))
+  df |> bind_rows(dfm) |> arrange(id, treatment, bset)
+}
+

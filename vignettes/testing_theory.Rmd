@@ -7,8 +7,10 @@ html_document:
 ---
 
 ```{r setup, include=FALSE}
+library(tidyverse)
+library(patchwork)
 knitr::opts_chunk$set(echo = TRUE)
-tar_load(mmzame_decisions)
+tar_load(mmzame_decisions, store = here::here("_targets"))
 ```
 
 This is to present the tests on individual behavior in 
@@ -18,18 +20,18 @@ Bertil Tungodden, Erik Ø. Sørensen, Shachar Kariv, and Alexander W. Cappelen.
 Prepping of data and pre-calculation of test statistics is outlined in the drake file "_targets.R". 
 
 ```{r}
-tar_load("p3_00")
-tar_load("p3_05")
-tar_load("p3_10")
-tar_load("p3_15")
-tar_load("p3_20")
-tar_load("p4_00")
-tar_load("p4_05")
-tar_load("p4_10")
-tar_load("p4_15")
-tar_load("p4_20")
-tar_load("selfish")
-tar_load("symmetric")
+tar_load("p3_00", store = here::here("_targets"))
+tar_load("p3_05", store = here::here("_targets"))
+tar_load("p3_10", store = here::here("_targets"))
+tar_load("p3_15", store = here::here("_targets"))
+tar_load("p3_20", store = here::here("_targets"))
+tar_load("p4_00", store = here::here("_targets"))
+tar_load("p4_05", store = here::here("_targets"))
+tar_load("p4_10", store = here::here("_targets"))
+tar_load("p4_15", store = here::here("_targets"))
+tar_load("p4_20", store = here::here("_targets"))
+tar_load("selfish", store = here::here("_targets"))
+tar_load("symmetric", store = here::here("_targets"))
 ```
 
 # Testing proposition 3
@@ -75,9 +77,9 @@ p3D <- graph_list[[502]] + xlim(0.65,1) +
   theme(plot.caption=element_blank()) + labs(x="CCEI", y="Fraction of permutations")
 p3_joint <- p3A + p3B + p3C + p3D + plot_annotation(tag_levels = 'A') 
 p3_joint
-ggsave(here("graphs","prop3_permutations.pdf"), plot=p3_joint, 
+ggsave(here::here("graphs","prop3_permutations.pdf"), plot=p3_joint, 
        width=7.29, height = 4.5, units="in")
-embed_fonts(here::here("graphs","prop3_permutations.pdf"))
+#embed_fonts(here::here("graphs","prop3_permutations.pdf"))
 ```
 
 What are the numbers?
@@ -172,7 +174,7 @@ prop4_h <- prop4_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL.
        caption="Tests of Proposition 4 on the impartial individuals.")
 propositions <- prop3_h + prop4_h + plot_annotation(tag_levels = 'A')
 propositions
-ggsave(here("graphs", "test_of_propositions.pdf"), plot=propositions, 
+ggsave(here::here("graphs", "test_of_propositions.pdf"), plot=propositions, 
        width=7.29, height = 4.5, units="in")
 ```
 
@@ -200,11 +202,11 @@ p3s %>% bind_rows(p4s) %>%
   labs(x = "p-value",
        y = "Fraction") +
   scale_x_continuous(breaks=c(0,0.5,1))
-ggsave(here("graphs", "power_analysis.pdf"), width=7.29, height=4.5, units="in")
+ggsave(here::here("graphs", "power_analysis.pdf"), width=7.29, height=4.5, units="in")
 ```
 
 ## Now for a Table variant
-We want a table variant (for now, only proposition 3):
+We want a table variant, first for the selfish proposition:
 ```{r}
 power_df <- p3s # %>% bind_rows(p4s)
 power <- power_df %>%  mutate(significant_01 = (p_prop<0.01),
@@ -217,7 +219,24 @@ power <- power_df %>%  mutate(significant_01 = (p_prop<0.01),
   ungroup() %>%
   pivot_wider(names_from=p_bronars, names_prefix="mu=", 
               values_from=significant_fraction)
-power %>% knitr::kable(digits=3)
+power %>% gt::gt() |> gt::fmt_number(decimals=3)
+```
+
+Now also for the impartial proposition:
+
+```{r}
+power_df <- p4s 
+power <- power_df %>%  mutate(significant_01 = (p_prop<0.01),
+                              significant_05 = (p_prop<0.05),
+                              significant_10 = (p_prop<0.10)) %>%
+  pivot_longer(starts_with("significant_"), names_to="significance_level", 
+               values_to = "significance") %>%
+  group_by(p_bronars, significance_level) %>%
+  summarize(significant_fraction = mean(significance)) %>%
+  ungroup() %>%
+  pivot_wider(names_from=p_bronars, names_prefix="mu=", 
+              values_from=significant_fraction)
+power %>% gt::gt() |> gt::fmt_number(decimals=3)
 ```
 
 

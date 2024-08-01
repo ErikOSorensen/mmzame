@@ -32,11 +32,14 @@ DATA_FILE_ID = 5446287
 BACKGROUND_FILE_ID = 5446286
 DATA_SERVER = "dataverse.harvard.edu"
 
-# End this file with a list of target objects.
+
+tar_option_set(seed = 341246134)
+
 list(
-  tar_target(mmzame_decisions_alltreatments, dataverse::get_dataframe_by_id(DATA_FILE_ID, 
-                                                                            .f = readr::read_tsv, 
-                                                                            server = DATA_SERVER) |>
+  tar_target(mmzame_decisions_alltreatments, 
+             dataverse::get_dataframe_by_id(DATA_FILE_ID, 
+                                            .f = readr::read_tsv, 
+                                            server = DATA_SERVER) |>
                filter(id<200|id>300)),
   tar_target(mmzame_background, dataverse::get_dataframe_by_id(BACKGROUND_FILE_ID,
                                                                .f = readr::read_tsv,
@@ -52,8 +55,8 @@ list(
   tar_target(prop4listm, prepare_decisions(mmzame_decisions_mirror, c("moral","dictator"))),
   tar_target(prop2listm, prepare_decisions(mmzame_decisions_mirror, c("risk","dictator"))),
   tar_target(all_domains, df_3way(mmzame_decisions)),
-  tar_target(pall_domains, calculate_3waytest(all_domains, np=NP_S)),
   tar_target(all_domainsm, df_3way(mmzame_decisions_mirror)),
+  tar_target(pall_domains,  calculate_3waytest(all_domains, np=NP_S)),
   tar_target(pall_domainsm, calculate_3waytest(all_domainsm, np=NP_S)),
   tar_target(p2_00, purrr::map(prop2list, p_permutations_bronars, np=NP_S, p_Bronars=0.00, rFOSD=TRUE)),
   tar_target(p3_00, purrr::map(prop3list, p_permutations_bronars, np=NP_S, p_Bronars=0.00, rFOSD=TRUE)),
@@ -71,6 +74,8 @@ list(
   tar_target(p4_20, purrr::map(prop4list, p_permutations_bronars, np=NP_S, p_Bronars=0.20, rFOSD=TRUE)),
   tar_target(prop3, list(p3_00, p3_05, p3_10, p3_15, p3_20)),
   tar_target(prop4, list(p4_00, p4_05, p4_10, p4_15, p4_20)),
+  tar_target(all, collect_all(mmzame_decisions, p2_00, p3_00, p4_00, pall_domains, p2_00m, p3_00m, p4_00m,
+                              pall_domainsm, symmetricp_dict, sym_dict)),
   tar_target(symmetric, mmzame_decisions %>% filter(treatment=="dictator") %>%
                mutate(yshare = y/(x+y)) %>%
                group_by(id) %>%

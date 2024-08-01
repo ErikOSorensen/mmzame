@@ -48,6 +48,7 @@ ccei <- function(x, p, tol = 1e-4, print.progress = FALSE) {
 # I include a parameter for whether the simulated choices should 
 # be on the non-dominated (FOSD) par of the budget line.
 simulated_bronars <- function(x, p, respect_FOSD=FALSE) {
+  
   # The x and the p arguments are datasets of equal size. 
   # I assume that all x are on the budget line.
   ns<-nrow(x)
@@ -427,3 +428,82 @@ create_mirrored_decisions <- function(df) {
   df |> bind_rows(dfm) |> arrange(id, treatment, bset)
 }
 
+collect_all <- function(mmzame_decisions, p2_00, p3_00, p4_00, pall_domains, p2_00m, p3_00m, p4_00m,
+                        pall_domainsm, symmetricp_dict, sym_dict) {
+  
+  p_values <- extract_pvalues(p2_00, p3_00, p4_00, pall_domains, p2_00m, 
+                              p3_00m, p4_00m, pall_domainsm)
+  shares <- shares_classifications(mmzame_decisions)
+  stochastic_symmetric <- stochastic_classifications(symmetricp_dict)
+  CCEI_nonstochastic <- create_CCEI_nonstochastic(sym_dict)
+  
+  all <- shares |> 
+    left_join(p_values) |> 
+    left_join(stochastic_symmetric) |>
+    left_join(CCEI_nonstochastic) |>
+    select( c("id",
+              "selfish99", "selfish975","selfish95","selfish90","selfish75",
+              "impartial05","impartial10",
+              "stochastic_symmetricd01", "stochastic_symmetricd05", "stochastic_symmetricd10",
+              "CCEI_nonstochastic_sym90", "CCEI_nonstochastic_sym95",
+              "reject_SRISK = PRISK", "reject_SRISK = SOCIAL", "reject_SOCIAL = PRISK", "reject_ALL DOMAINS",
+              "p_SRISK = PRISK", "p_SRISK = SOCIAL", "p_SOCIAL = PRISK", "p_ALL DOMAINS",
+              "reject_mSRISK = mPRISK", "reject_mSRISK = mSOCIAL", "reject_mSOCIAL = mPRISK", "reject_mALL DOMAINS",
+              "p_mSRISK = mPRISK", "p_mSRISK = mSOCIAL", "p_mSOCIAL = mPRISK", "p_mALL DOMAINS"))
+  all
+}
+
+extract_pvalues <- function(p2_00, p3_00, p4_00, pall_domains, p2_00m, 
+                p3_00m, p4_00m, pall_domainsm) {
+  p_from_list <- function(x) {
+    data.frame(id = x$id, p = x$p_com)
+  }
+  allp3  <- purrr::map(p3_00,         p_from_list) |> bind_rows() |> mutate(tst="SRISK = PRISK")
+  allp4  <- purrr::map(p4_00,         p_from_list) |> bind_rows() |> mutate(tst="SRISK = SOCIAL")
+  allp2  <- purrr::map(p2_00,         p_from_list) |> bind_rows() |> mutate(tst="SOCIAL = PRISK")
+  alld   <- purrr::map(pall_domains,  p_from_list) |> bind_rows() |> mutate(tst="ALL DOMAINS")
+  allp3m <- purrr::map(p3_00m,        p_from_list) |> bind_rows() |> mutate(tst="mSRISK = mPRISK")
+  allp4m <- purrr::map(p4_00m,        p_from_list) |> bind_rows() |> mutate(tst="mSRISK = mSOCIAL")
+  allp2m <- purrr::map(p2_00m,        p_from_list) |> bind_rows() |> mutate(tst="mSOCIAL = mPRISK")
+  alldm  <- purrr::map(pall_domainsm, p_from_list)|> bind_rows() |> mutate(tst="mALL DOMAINS")
+  p_values <- list(allp3, allp4, allp2, alld, allp3m, allp4m, allp2m, alldm) |> 
+    bind_rows()  |>
+    mutate(reject = as.numeric(p<0.05)) |>
+    pivot_wider(id_cols="id", names_from="tst", values_from=c(p,reject))
+  p_values
+}
+
+create_CCEI_nonstochastic <- function(sym_dict)  {
+  CCEI_nonstochastic <- purrr::map(sym_dict, p_symmetric_nonstochastic) |> 
+    bind_rows() |>
+    mutate(CCEI_nonstochastic_sym95 = as.numeric( (sym_long / sym_short)>0.95),
+           CCEI_nonstochastic_sym90 = as.numeric( (sym_long / sym_short)>0.90)) |>
+    select(c(id, CCEI_nonstochastic_sym90, CCEI_nonstochastic_sym95))
+  CCEI_nonstochastic
+}
+
+stochastic_classifications <- function(symmetricp_dict) {
+  stochastic_symmetric <- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |> 
+    bind_rows() |> 
+    mutate(stochastic_symmetricp = p,
+           stochastic_symmetricd05 = as.numeric(p>0.05),
+           stochastic_symmetricd01 = as.numeric(p>0.01),
+           stochastic_symmetricd10 = as.numeric(p>0.10)) |>
+    select(c(id, stochastic_symmetricp, stochastic_symmetricd01, stochastic_symmetricd05, stochastic_symmetricd10))
+  stochastic_symmetric
+}
+
+shares_classifications <- function(mmzame_decisions) {
+  shares <- mmzame_decisions |> 
+    filter(treatment=="dictator") |>
+    group_by(id) |>
+    summarize( mean_self = mean(y/(y+x))) |>
+    mutate(selfish99 = as.numeric(mean_self>0.99),
+           selfish975 = as.numeric(mean_self>0.975),
+           selfish95 = as.numeric(mean_self>0.95),
+           selfish90 = as.numeric(mean_self>0.90),
+           selfish75 = as.numeric(mean_self>0.75),
+           impartial05 = as.numeric( abs(mean_self - 0.5) < 0.05),
+           impartial10 = as.numeric( abs(mean_self - 0.5) < 0.10)) 
+  shares
+}

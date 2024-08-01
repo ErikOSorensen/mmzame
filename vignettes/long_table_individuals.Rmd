@@ -13,118 +13,26 @@ library("tidyverse")
 library("revealedPrefs")
 library("gt")
 tar_load(mmzame_decisions, store = here::here("_targets"))
-tar_load(p3_00, store = here::here("_targets"))
-tar_load(p4_00, store = here::here("_targets"))
-tar_load(p2_00, store = here::here("_targets"))
-tar_load(pall_domains, store = here::here("_targets"))
-tar_load(p3_00m, store = here::here("_targets"))
-tar_load(p4_00m, store = here::here("_targets"))
-tar_load(p2_00m, store = here::here("_targets"))
-tar_load(pall_domainsm, store = here::here("_targets"))
-tar_load(symmetricp_dict, store = here::here("_targets"))
-tar_load(sym_dict, store = here::here("_targets"))
+tar_load(all, store = here::here("_targets"))
 ```
 
 
-## Extracting all p-values from everyone
+# Creating main table of results
 
-```{r}
-p_from_list <- function(x) {
-  data.frame(id = x$id, p = x$p_com)
-}
-allp3 <- map(p3_00, p_from_list) |> bind_rows() |> mutate(tst="SRISK = PRISK")
-allp4 <- map(p4_00, p_from_list) |> bind_rows() |> mutate(tst="SRISK = SOCIAL")
-allp2 <- map(p2_00, p_from_list) |> bind_rows() |> mutate(tst="SOCIAL = PRISK")
-alld <- map(pall_domains, p_from_list) |> bind_rows() |> mutate(tst="ALL DOMAINS")
-allp3m <- map(p3_00m, p_from_list) |> bind_rows() |> mutate(tst="mSRISK = mPRISK")
-allp4m <- map(p4_00m, p_from_list) |> bind_rows() |> mutate(tst="mSRISK = mSOCIAL")
-allp2m <- map(p2_00m, p_from_list) |> bind_rows() |> mutate(tst="mSOCIAL = mPRISK")
-alldm <- map(pall_domainsm, p_from_list) |> bind_rows() |> mutate(tst="mALL DOMAINS")
-
-
-p_values <- list(allp3, allp4, allp2, alld, allp3m, allp4m, allp2m, alldm) |> 
-  bind_rows()  |>
-  mutate(reject = as.numeric(p<0.05)) |>
-  pivot_wider(id_cols="id", names_from="tst", values_from=c(p,reject))
-```
-
-
-## Different categorizations
-
-```{r}
-shares <- mmzame_decisions |> 
-  filter(treatment=="dictator") |>
-  group_by(id) |>
-  summarize( mean_self = mean(y/(y+x))) |>
-  mutate(selfish99 = as.numeric(mean_self>0.99),
-         selfish975 = as.numeric(mean_self>0.975),
-         selfish95 = as.numeric(mean_self>0.95),
-         selfish90 = as.numeric(mean_self>0.90),
-         selfish75 = as.numeric(mean_self>0.75),
-         impartial05 = as.numeric( abs(mean_self - 0.5) < 0.05),
-         impartial10 = as.numeric( abs(mean_self - 0.5) < 0.10)) 
-```
-
-
-We have the statistical test of symmetry in the social risk domain.
-
-```{r}
-stochastic_symmetric <- map(symmetricp_dict, function(x) { data.frame( id = x$id, p=x$p)}) |> 
-  bind_rows() |> 
-  mutate(stochastic_symmetricp = p,
-         stochastic_symmetricd05 = as.numeric(p>0.05),
-         stochastic_symmetricd01 = as.numeric(p>0.01),
-         stochastic_symmetricd10 = as.numeric(p>0.10)) |>
-  select(c(id, stochastic_symmetricp, stochastic_symmetricd01, stochastic_symmetricd05, stochastic_symmetricd10))
-```
-
-A new way of classification is a non-stochastic variant of the symmetry test.
-First, calculate CCEI on the original data (n=50). Then concatenate this with the
-symmetric data, for a total of n=100. Run the CCEI on the long data, which will
-not be larger than the short CCEI. If the long CCEI / short CCEI > 0.95 
-(Varian's cutoff), we say that there is symmetry. 
-
-
-```{r}
-CCEI_nonstochastic <- purrr::map(sym_dict, p_symmetric_nonstochastic) |> 
-  bind_rows() |>
-  mutate(CCEI_nonstochastic_sym95 = as.numeric( (sym_long / sym_short)>0.95),
-         CCEI_nonstochastic_sym90 = as.numeric( (sym_long / sym_short)>0.90)) |>
-  select(c(id, CCEI_nonstochastic_sym90, CCEI_nonstochastic_sym95))
-```
-
-
-
-## Putting things together
-
-```{r}
-all <- shares |> 
-  left_join(p_values) |> 
-  left_join(stochastic_symmetric) |>
-  left_join(CCEI_nonstochastic) |>
-  select( c("id",
-            "selfish99", "selfish975","selfish95","selfish90","selfish75",
-            "impartial05","impartial10",
-            "stochastic_symmetricd01", "stochastic_symmetricd05", "stochastic_symmetricd10",
-            "CCEI_nonstochastic_sym90", "CCEI_nonstochastic_sym95",
-            "reject_SRISK = PRISK", "reject_SRISK = SOCIAL", "reject_SOCIAL = PRISK", "reject_ALL DOMAINS",
-            "p_SRISK = PRISK", "p_SRISK = SOCIAL", "p_SOCIAL = PRISK", "p_ALL DOMAINS",
-            "reject_mSRISK = mPRISK", "reject_mSRISK = mSOCIAL", "reject_mSOCIAL = mPRISK", "reject_mALL DOMAINS",
-            "p_mSRISK = mPRISK", "p_mSRISK = mSOCIAL", "p_mSOCIAL = mPRISK", "p_mALL DOMAINS",
-            
-            ))
-```
-
-Outputting to a spreadsheet:
-
-```{r}
-write_excel_csv(all, here::here("tables", "longtable.csv"))
-```
+The construction of the input data is pushed into the *target* `all`. What
+is needed is to present this in the shape we want.
 
 Now, trying to put together a table with the outputs. I want to piece it 
 together by groups of 4 columns (with optional counts), conditional on 
 a partition of individuals, and conditional on a significance level. I also 
 want to have an optional "header" column with number of observations.
+
+
+## Code for constructing table of numbers
+The construction is such that at the bottom level, `main_section` creates
+a short collection of cells, `main_row` collects a number of sections
+into a row, and `main_rows` creates all the necessary rows. 
+
 
 ```{r}
 main_section <- function(df, partition, alpha, ns=FALSE,
@@ -177,24 +85,30 @@ main_rows <- function(df, partitions, cnames = c("p_SRISK = PRISK", "p_SRISK = S
 Create all the numerical rows:
 
 ```{r}
-ps <- c("selfish99","selfish975","selfish95","selfish90", "impartial05","stochastic_symmetricd10","stochastic_symmetricd05","stochastic_symmetricd01")
+ps <- c("selfish99","selfish975","selfish95","selfish90", "impartial05",
+        "stochastic_symmetricd10","stochastic_symmetricd05","stochastic_symmetricd01")
 all_numrows <- main_rows(all, ps)
 ```
 
 Now, create numerical rows for alternative tests that *impose* symmetry.
 
 ```{r}
-psm <- c("impartial05","stochastic_symmetricd10","stochastic_symmetricd05","stochastic_symmetricd01")
+psm <- c("impartial05","stochastic_symmetricd10","stochastic_symmetricd05",
+         "stochastic_symmetricd01")
 all_numrows_with_symmetry <- main_rows(all,
-                                       c("impartial05","stochastic_symmetricd10","stochastic_symmetricd05","stochastic_symmetricd01"),
-                                       cnames = c("p_mSRISK = mPRISK", "p_mSRISK = mSOCIAL", "p_mSOCIAL = mPRISK", "p_mALL DOMAINS"))
+                                       c("impartial05","stochastic_symmetricd10",
+                                         "stochastic_symmetricd05","stochastic_symmetricd01"),
+                                       cnames = c("p_mSRISK = mPRISK", "p_mSRISK = mSOCIAL", 
+                                                  "p_mSOCIAL = mPRISK", "p_mALL DOMAINS"))
 ```
 
 
 
-## Creating the output table
+## Code for presenting the final results
 
-```{r}
+First for the main (big) table in the paper:
+
+```{r echo=FALSE}
 tbl <- all_numrows |> 
   gt() |>
   fmt_number(columns = 3:14,
@@ -261,10 +175,10 @@ tbl
 tbl |> gtsave(filename = here::here("tables", "main_table.tex"), to = "latex")
 ```
 
-Variant of output table B that impose symmetry:
+Now for the variant of panel B that impose symmetry (for the appendix):
 
 
-```{r}
+```{r echo=FALSE}
 tblC <- all_numrows_with_symmetry |> 
   gt() |>
   fmt_number(columns = 3:14,
@@ -325,7 +239,7 @@ tblC |> gtsave(filename = here::here("tables", "main_tableC.tex"), to = "latex")
 
 
 
-## Matching of different impartial definitions
+# Matching of different impartial definitions
 
 There are more impartial/symmetric individuals with the stochastic tests. 
 A Venn-diagram with 4 groups is a mess to look at. But there are alternatives,

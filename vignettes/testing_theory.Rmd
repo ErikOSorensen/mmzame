@@ -9,6 +9,7 @@ html_document:
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(patchwork)
+library(targets)
 knitr::opts_chunk$set(echo = TRUE)
 tar_load(mmzame_decisions, store = here::here("_targets"))
 ```
@@ -104,8 +105,8 @@ prop3 |> filter(id %in% c(511,635,317,645)) |> gt::gt() |> gt::fmt_number(decima
 
 
 
-# Testing proposition 4
-The same graphs for testing proposition 4 is available, but intended for an online appendix only.
+# Testing impartial proposition 
+The same graphs for testing impartial proposition is available, but intended for an online appendix only.
 
 ```{r}
 graph_list <- list()
@@ -149,39 +150,8 @@ prop4 %>% mutate(sign10 = p_com<0.1,
             n_sign01 = sum(sign01)) |> gt::gt()
 ```
 
-# Creating graph with final p-values
-
-We want plots of p-values for the two propositions in the paper. 
-Histograms of p-values from all the permutation tests from the relevant
-tests.
-```{r}
-prop3_ps <- map_dbl( keep(p3_00, function(x) (x$id %in% selfish$id)),
-                     function(x) x$p_com)
-prop3_df <- tibble(p=prop3_ps)
-prop4_ps <- map_dbl( keep(p4_00, function(x) (x$id %in% symmetric$id)),
-                     function(x) x$p_com)
-prop4_df <- tibble(p=prop4_ps)
-prop3_h <- prop3_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
-  geom_histogram(binwidth=0.05, boundary=0) +
-  theme_minimal() +
-  labs(x = "p-value",
-       y = "Fraction",
-       caption="Tests of Proposition 3 on the selfish individuals.")
-prop4_h <- prop4_df %>% ggplot(aes(x=p, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
-  geom_histogram(binwidth=0.05, boundary=0) +
-  theme_minimal() +
-  labs(x = "p-value",
-       y = "Fraction",
-       caption="Tests of Proposition 4 on the impartial individuals.")
-propositions <- prop3_h + prop4_h + plot_annotation(tag_levels = 'A')
-propositions
-ggsave(here::here("graphs", "test_of_propositions.pdf"), plot=propositions, 
-       width=7.29, height = 4.5, units="in")
-```
 
 
-## Now for a table variant
-For the table, we don't distinguish between the two propositions.
 
 # Creating graph to showcase the power of the experiment.
 
@@ -195,18 +165,8 @@ p4s <- c(p4_00, p4_05, p4_10, p4_15, p4_20) %>%
   keep(function(x) x$id %in% symmetric$id) %>%
   map_df(function(x) tibble(p_bronars=x$p_Bronars, p_prop=x$p_com, prop="Proposition 4")) %>%
   bind_rows()
-p3s %>% bind_rows(p4s) %>% 
-  ggplot(aes(x=p_prop, y= (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
-  geom_histogram(binwidth=0.05, boundary=0) +
-  theme_minimal() +
-  facet_grid(prop ~ p_bronars) +
-  labs(x = "p-value",
-       y = "Fraction") +
-  scale_x_continuous(breaks=c(0,0.5,1))
-ggsave(here::here("graphs", "power_analysis.pdf"), width=7.29, height=4.5, units="in")
 ```
 
-## Now for a Table variant
 We want a table variant, first for the selfish proposition:
 ```{r}
 power_df <- p3s # %>% bind_rows(p4s)
@@ -220,7 +180,11 @@ power <- power_df %>%  mutate(significant_01 = (p_prop<0.01),
   ungroup() %>%
   pivot_wider(names_from=p_bronars, names_prefix="mu=", 
               values_from=significant_fraction)
-power %>% gt::gt() |> gt::fmt_number(decimals=3)
+pwA <- power %>% gt::gt() |> gt::fmt_number(decimals=3) |>
+  gt::tab_spanner(label = "Probability of random choice replacement", columns = 2:6) |>
+  gt::tab_spanner(label = "Testing proposition 2 (selfish)", columns=1:6)
+pwA
+pwA |> gt::gtsave(filename = here::here("tables", "power_A.tex"), to = "latex")
 ```
 
 Now also for the impartial proposition:
@@ -237,7 +201,11 @@ power <- power_df %>%  mutate(significant_01 = (p_prop<0.01),
   ungroup() %>%
   pivot_wider(names_from=p_bronars, names_prefix="mu=", 
               values_from=significant_fraction)
-power %>% gt::gt() |> gt::fmt_number(decimals=3)
+pwB <- power %>% gt::gt() |> gt::fmt_number(decimals=3) |>
+  gt::tab_spanner(label = "Probability of random choice replacement", columns = 2:6) |>
+  gt::tab_spanner(label = "Testing proposition 3 (impartial)", columns=1:6)
+pwB
+pwB |> gt::gtsave(filename = here::here("tables", "power_B.tex"), to = "latex")
 ```
 
 

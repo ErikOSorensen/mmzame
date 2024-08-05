@@ -8,7 +8,9 @@ html_document:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-tar_load(mmzame_decisions)
+library(tidyverse)
+library(targets)
+tar_load(mmzame_decisions, store = here::here("_targets"))
 ```
 
 This is to calculate the descriptives in the subsection on aggregate behavior in 
@@ -42,23 +44,6 @@ average_social_decisions %>% filter(mean_yshare<0.5) %>%
   arrange(mean_yshare)
 ```
 
-Finally, we want a histogram of the mean share to the y-good:
-```{r}
-average_social_decisions %>% ggplot(aes(x=mean_yshare, y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
-  geom_histogram(binwidth=0.05, boundary=0) +
-  labs(x = "Mean y/(x+y)",
-       y = "Fraction",
-       caption ="Decisions in the Social Choice treatment.") +
-  theme_minimal() 
-ggsave(here::here("graphs", "aggregate_social_choice.pdf"))
-```
-# Distribution of choices in the *Personal Risk* and the *Social Risk* treatments
-
-In the personal risk and social risk treatments, it is not the average share
-to the y-axis that is of importance, but the average share to the cheapest asset.
-I also merge in the type classification based on social choices.
-
-I rename treatments for the graph creation
 
 ```{r}
 average_symmetric_decisions <- mmzame_decisions %>% 
@@ -73,15 +58,6 @@ average_symmetric_decisions <- mmzame_decisions %>%
          "Social Risk" = "moral"))
 ```
 
-Faceted histogram:
-```{r}
-average_symmetric_decisions %>% ggplot(aes(x=mean_cheapest, y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) +
-  geom_histogram(binwidth=0.05, boundary=0.0) + 
-  labs(x = "Mean share of cheapest asset in portfolio",
-       y = "Fraction") +
-  theme_minimal()  + facet_grid(.~treatmentf)
-ggsave(here::here("graphs", "aggregate_risks.pdf"))
-```
 
 How many are in the extreme groups? 
 ```{r}
@@ -90,12 +66,12 @@ average_symmetric_decisions %>%
          less_than_55p = (mean_cheapest < 0.55),
          less_than_50p = (mean_cheapest < 0.5)) %>% 
   group_by(treatmentf, more_than_95p, less_than_55p, less_than_50p) %>%
-  summarize(n = n()) %>% knitr::kable()
+  summarize(n = n()) %>% gt::gt()
 ```
 
 
 ```{r}
-average_symmetric_decisions |> filter(mean_cheapest<0.5)
+average_symmetric_decisions |> filter(mean_cheapest<0.5) |> gt::gt()
 ```
 
 # Variant graph with all treatments
@@ -138,30 +114,15 @@ bar_fractions <- bar_data %>%
 
 Now, it should be possible to use ggplot to figure out how to present the groups:
 ```{r}
-showtext_auto()
 bar_fractions %>% ggplot(aes(x=ygroup, y=fraction, group=treatmentf, fill=treatmentf)) + 
   geom_bar(stat="identity", position=position_dodge2()) +
-  labs(x = "Token share",
+  labs(x = "Token shares",
        y = "Fraction of subjects") +
   theme_minimal() + 
   theme(legend.title=element_blank()) + 
-  scale_fill_grey()
-ggsave(here::here("graphs","aggregate_choices_original.pdf"))
-```
-
-
-
-Alternative presentation for revision, with three histograms in a row:
-
-```{r}
-bar_data |> 
-  ggplot(aes(x=yshare, y = (..count..)/tapply(..count.., ..PANEL.., sum) [..PANEL..])) +
-  geom_histogram(binwidth=0.05, boundary=1) +
-  theme_minimal() +
-  facet_grid(.~treatmentf) +
-  labs(x = "Share of tokens",
-       y = "Fraction")
-ggsave(here::here("graphs","aggregate_choices.pdf"), width=16, height=10, units="cm")
+  scale_fill_grey() +
+  scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5))
+ggsave(here::here("graphs","aggregate_choices.pdf"), width = 16, height = 10, units = "cm")
 ```
 
 

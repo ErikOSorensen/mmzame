@@ -8,7 +8,12 @@ html_document:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-tar_load(mmzame_decisions)
+library(tidyverse)
+library(targets)
+library(revealedPrefs)
+tar_load(mmzame_decisions, store = here::here("_targets"))
+tar_load(pure_bronars, store = here::here("_targets"))
+
 ```
 
 
@@ -45,12 +50,12 @@ Now, some descriptive statics on these CCEIs:
 ccei_df %>% group_by(domain) %>%
   summarize( mean_ccei = mean(ccei),
              above_90 = mean( ccei>0.9)) %>%
-  knitr::kable(digits=3)
+  gt::gt() |> gt::fmt_number(decimals=3)
 ```
 
 For the people we use in table 4:
 ```{r}
-ccei_df |> filter(id %in% c(511,635,317,645))
+ccei_df |> filter(id %in% c(511,635,317,645)) |> gt::gt() |> gt::fmt_number(decimals=3, columns=2)
 ```
 
 The average distribution of min and max CCEI (of the Social Risk and Private Risk).
@@ -89,8 +94,9 @@ ccei_bar_fractions %>% ggplot(aes(x=ccei_group, y=fraction, group=domain, fill=d
        y = "Fraction of subjects") +
   theme_minimal() + 
   theme(legend.title=element_blank()) + 
-  scale_fill_grey()
-ggsave(here::here("graphs","empirical_cceis.pdf"))
+  scale_fill_grey() + 
+  scale_y_continuous(limits=c(0,1), breaks=c(0,0.2,0.4,0.6,0.8,1.0))
+ggsave(here::here("graphs","empirical_cceis.pdf"), width=16, height = 10, units = "cm")
 ```
 
 
@@ -100,14 +106,14 @@ ggsave(here::here("graphs","empirical_cceis.pdf"))
 
 I have pre-calculated the Bronars numbers, and summarize these:
 ```{r}
-tar_load(pure_bronars)
 bronars_df <- tibble(domain = "Bronars", ccei=pure_bronars)
 bronars_df %>% summarize(Bronars_mean_ccei = mean(ccei),
                          Bronars_above_90 = mean( ccei>0.9)) %>%
-  knitr::kable(digits=3)
+  gt::gt() |>
+  gt::fmt_number(decimals=3)
 ```
 
-I append the Bronars data to the actual CCEIs and create a faceted histogram:
+I append the Bronars data to the actual CCEIs to create a bar chart.
 
 ```{r}
 df <- ccei_df %>% mutate(domain = as.character(domain)) %>%
@@ -139,8 +145,9 @@ df %>% ggplot(aes(x=ccei_group, y=fraction, group=outcome, fill=outcome)) +
        y = "Fraction of subjects") +
   theme_minimal() + 
   theme(legend.title=element_blank()) + 
-  scale_fill_grey()
-ggsave(here("graphs", "empirical_cceis_and_Bronars.pdf"))
+  scale_fill_grey() +
+  scale_y_continuous(limits=c(0,1), breaks=c(0,0.2,0.4,0.6,0.8,1.0))
+ggsave(here::here("graphs", "empirical_cceis_and_Bronars.pdf"), width=16, height = 10, units="cm")
 ```
 
 ```{r}

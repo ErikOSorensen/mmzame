@@ -114,7 +114,7 @@ p645 <- selfishgraphs[[645]] + theme(legend.position='none') +
 
 p511 + p635 + p317 + p645 +
   plot_annotation(tag_levels = 'A') + theme(legend.position="none")
-ggsave(here::here("graphs", "logprice_scatters.pdf"))
+ggsave(here::here("graphs", "logprice_scatters.pdf"), width=20, height = 14, units = "cm")
 embed_fonts(here::here("graphs", "logprice_scatters.pdf"))
 ```
 

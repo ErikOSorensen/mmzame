@@ -14,7 +14,7 @@ source(here::here("functions.R"))
 ```
 
 ```{r}
-tar_load(mmzame_background)
+tar_load(mmzame_background,  store = here::here("_targets"))
 tbl <- background_table(mmzame_background)
 descriptive_table <- tbl |> gt::gt() |> 
   tab_spanner(label = "Statistics", columns=c(mean,sd)) |>
@@ -49,7 +49,7 @@ fmt_missing(
     rows = everything(),
     missing_text = "") 
 descriptive_table
-descriptive_table |> as_latex() |> cat(file = here::here("tables", "TableA1.tex"))
+descriptive_table |> gt::gtsave(filename = here::here("tables", "TableA1.tex"), to = "latex")
 ```
 
 

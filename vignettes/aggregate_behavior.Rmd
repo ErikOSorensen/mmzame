@@ -62,19 +62,66 @@ average_symmetric_decisions <- mmzame_decisions %>%
 How many are in the extreme groups? 
 ```{r}
 average_symmetric_decisions %>%
-  mutate(more_than_95p = (mean_cheapest > 0.95),
-         less_than_55p = (mean_cheapest < 0.55),
-         less_than_50p = (mean_cheapest < 0.5)) %>% 
-  group_by(treatmentf, more_than_95p, less_than_55p, less_than_50p) %>%
+  mutate(more_than_95p = (mean_cheapest > 0.95)) %>% 
+  group_by(treatmentf, more_than_95p) %>%
   summarize(n = n()) %>% gt::gt()
 ```
-
+```{r}
+average_symmetric_decisions %>%
+  mutate(less_than_55p = (mean_cheapest < 0.55))%>% 
+  group_by(treatmentf, less_than_55p) %>%
+  summarize(n = n()) %>% gt::gt()
+```
 
 ```{r}
 average_symmetric_decisions |> filter(mean_cheapest<0.5) |> gt::gt()
 ```
 
-# Variant graph with all treatments
+## Extreme utilitarianism and Rawlsianism
+
+```{r}
+xtremesU <- mmzame_decisions |> 
+  mutate(px_high = ifelse(maxx>maxy,1,0),
+                           share_self = y/(x+y)) |>
+  filter(treatment=="dictator") |>
+  group_by(id, px_high) |>
+  summarize( share_self = mean(share_self)) |>
+  pivot_wider(id_cols = id, names_from = "px_high", names_prefix = "HIGH_Px_", values_from = share_self) |>
+  mutate(utilitarian01 = (HIGH_Px_0>0.99) * (HIGH_Px_1<0.01),
+         utilitarian05 = (HIGH_Px_0>0.95) * (HIGH_Px_1<0.05),
+         utilitarian10 = (HIGH_Px_0>0.90) * (HIGH_Px_1<0.10))
+xtremesU |> filter(utilitarian10==1) |> 
+  ungroup() |> 
+  gt::gt() |> 
+  gt::tab_spanner(label="Share to self", columns=2:3)
+```
+The two "Share to self" columns are for the case when px<py (HIGH_Px_0) and for px>py (HIGH_Px_0),
+and measure the averaged share to self over these decisions.
+
+
+Similarly, extremes towards Rawlsianism (I measure distance from equality in token shares):
+
+```{r}
+xtremesR <- mmzame_decisions |> 
+  mutate(px_high = ifelse(maxx>maxy,1,0),
+                           share_self = y/(x+y)) |>
+  filter(treatment=="dictator") |>
+  group_by(id, px_high) |>
+  summarize( share_self = mean(share_self)) |>
+  pivot_wider(id_cols = id, names_from = "px_high", names_prefix = "HIGH_Px_", values_from = share_self) |>
+  mutate(rawls01 = (abs(HIGH_Px_0-0.5)<0.01 ) * (( abs(HIGH_Px_1-0.5)<0.01 )),
+         rawls05 = (abs(HIGH_Px_0-0.5)<0.05 ) * (( abs(HIGH_Px_1-0.5)<0.05 )),
+         rawls10 = (abs(HIGH_Px_0-0.5)<0.10 ) * (( abs(HIGH_Px_1-0.5)<0.10 )))
+xtremesR |> filter(rawls10==1) |> 
+  ungroup() |> 
+  gt::gt() |> 
+  gt::tab_spanner(label="Share to self", columns=2:3)
+```
+
+
+
+
+#  graph with all treatments
 
 We want a bar-graph with grouped levels of the outcomes of the outcomes
 in the two previous graphs. First I put the data all together in one dataframe

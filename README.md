@@ -59,11 +59,13 @@ The data file is downloaded when the `targets` plan is first run.
 
 ### Memory and Runtime Requirements
 
-Approximate time needed to reproduce all the analyses on a desktop machine (2021) would be between 5 and 10 hours.
 
-The code was last run on a Ubuntu 20.04.3 system, with an AMD Ryzen 9 3950X 16-Core Processor and 32 GB memory. 
+The code was last run on a Ubuntu 20.04.3 system, on a VMWare virtual desktop running on top of AMD EPYC 7543P 32-Core Processor. 
 Memory requirements are limited, at around 200 MB per worker node. 
 Disk use is very limited (at less than 0.5GB).
+
+Approximate time needed to reproduce all the analyses on a desktop machine (2023) is about 18 hours.
+
 
 With a less powerful system, it would be good to adjust the following line in `main.R`:
 

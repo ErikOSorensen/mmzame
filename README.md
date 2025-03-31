@@ -127,14 +127,18 @@ there are dependencies (as described in `_targets.R`) such that it is always saf
 to run the `main.R` script to generate the displays. 
 
 
-| Figure/Table #    | Program                  |Line Number | Output file                      | Note                            |
+| Figure/Table #    | Program                  |Line Number | Display file name                      | Note                            |
 |-------------------|--------------------------|-------------|----------------------------------|---------------------------------|
-| Table 1           |            |             |                ||
-| Table 2           |  |           |                         ||
-| Figure 1          | n.a. (no data)           |             |                                  | (theoretical illustration)         |
-| Figure 2          | n.a. (no data)           |             |                                  | (theoretical illustration)          |
+| Table 1           |  vignettes/long_table_individuals.Rmd | 175          | tables/main_table.tex | |
+| Table 2A         |  vignettes/testing_theory.Rmd           |  187| tables/power_A.tex  | |
+| Table 2B         |  vignettes/testing_theory.Rmd           | 208       | tables/power_B.tex | |
+| Figure 1          | n.a. (no data)           |             |          Figures_1.pdf                 | (theoretical illustration)         |
+| Figure 2          | n.a. (no data)           |             |          Figures_2.pdf                        | (theoretical illustration)          |
 | Figure 3          |vignettes/aggregate_behavior.Rmd      |             | graphs/aggregate_choices.pdf       |       |
 | Figure 4          |vignettes/individual_behavior.Rmd |                | graphs/logprice_scatters.pdf | | 
 | Figure 5          |vignettes/testing_rationality.Rmd |                | graphs/empirical_cceis.pdf | |
 | Figure 6          |vignettes/testing_rationality.Rmd |                | graphs/empirical_cceis_and_Bronars.pdf  | |
 | Figure 7          |vignettes/testing_theory.Rmd      |                | graphs/prop3_permutations.pdf | | 
+| Appendix Table 1  |  n.a. (no data)                  |                |                               | (theoretical illustration) |
+| Appendix Table 2 | vignettes/background_table.Rmd   | 52             | tables/TableA1.tex            |                            |
+| Appendix Table 3 | vignettes/long_table_individuals.Rmd | 236        | tables/main_tableC.tex        |                            | 

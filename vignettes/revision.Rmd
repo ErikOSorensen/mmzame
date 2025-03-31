@@ -127,20 +127,32 @@ the possible sequences of the treatments, a more general
 test of sequence effects.
 
 First for risk, we test 
-the share allocated the cheapest asset by sequence (all six sequences):
+the share allocated the cheapest asset by sequence. Note that two sequences, (SR, PR, SC, O) and (SR, PR, O, SC)
+should be the same for the choices made in the PR domain, so reduce these to a single order for the
+purpose of testing, there are 5 relevant orders.
+
 ```{r echo=FALSE}
-ordered_means %>% filter(treatment=="risk") %>%
-  kruskal.test(share_cheapest ~ DRO_order, data=.)
+ordered_means %>% 
+  filter(treatment=="risk") |>
+  mutate(R_order = ifelse(DRO_order %in% c("3,2,4","4,2,3"), "R2", DRO_order)) |>
+  kruskal.test(share_cheapest ~ R_order, data=_)
 ```
-Now for "Social Choice", we look at the share taken for self:
+Now for "Social Choice", we look at the share taken for self in SC, whether it depends on 
+order. In this case, the sequences (SR, SC, PR, O) and (SR, SC, O, PR) should also 
+be treated as equivalent.
 ```{r}
-ordered_means %>% filter(treatment=="dictator") %>%
-  kruskal.test(share_self ~ DRO_order, data=.) 
+ordered_means |> 
+  filter(treatment=="dictator") |>
+  mutate(D_order = ifelse(DRO_order %in% c("2,3,4","2,4,3"), "D2", DRO_order)) |>
+  kruskal.test(share_self ~ D_order, data=_) 
 ```
-And for the observer choice itself (not used in the paper):
+And for the observer choice itself (not used in the paper). In this case,
+the sequences (SR, O, SC, PR) and (SR, O, PR, SC) should be treated as
+equivalent.
 ```{r}
-ordered_means %>% filter(treatment=="observer") %>%
-  kruskal.test(share_cheapest ~ DRO_order, data=.) 
+ordered_means %>% filter(treatment=="observer") |>
+  mutate(O_order = ifelse(DRO_order %in% c("3,4,2","4,3,2"), "O2", DRO_order)) |>
+  kruskal.test(share_cheapest ~ O_order, data=_) 
 ```
 
 

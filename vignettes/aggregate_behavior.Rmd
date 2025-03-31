@@ -99,24 +99,22 @@ The two "Share to self" columns are for the case when px<py (HIGH_Px_0) and for 
 and measure the averaged share to self over these decisions.
 
 
-Similarly, extremes towards Rawlsianism (I measure distance from equality in token shares):
+Another "Rawlsian" way of thinking is that the difference in what is allocated to x and y is very small,
 
 ```{r}
-xtremesR <- mmzame_decisions |> 
-  mutate(px_high = ifelse(maxx>maxy,1,0),
-                           share_self = y/(x+y)) |>
-  filter(treatment=="dictator") |>
-  group_by(id, px_high) |>
-  summarize( share_self = mean(share_self)) |>
-  pivot_wider(id_cols = id, names_from = "px_high", names_prefix = "HIGH_Px_", values_from = share_self) |>
-  mutate(rawls01 = (abs(HIGH_Px_0-0.5)<0.01 ) * (( abs(HIGH_Px_1-0.5)<0.01 )),
-         rawls05 = (abs(HIGH_Px_0-0.5)<0.05 ) * (( abs(HIGH_Px_1-0.5)<0.05 )),
-         rawls10 = (abs(HIGH_Px_0-0.5)<0.10 ) * (( abs(HIGH_Px_1-0.5)<0.10 )))
-xtremesR |> filter(rawls10==1) |> 
-  ungroup() |> 
-  gt::gt() |> 
-  gt::tab_spanner(label="Share to self", columns=2:3)
+mmzame_decisions |> filter(treatment=="dictator") |>
+  mutate(reldiff = abs(x-y)/(x+y),
+         selfshare = y/(x+y)) |>
+  group_by(id) |>
+  summarize(max_reldiff = max(reldiff),
+            mean_reldiff = mean(reldiff),
+            max_selfshare = max(selfshare),
+            min_selfshare = min(selfshare)) |>
+  arrange(mean_reldiff) |>
+  head() |> 
+  gt::gt()
 ```
+
 
 
 

@@ -14,9 +14,8 @@ source(here::here("functions.R"))
 ```
 
 ```{r}
-tar_load(mmzame_background,  store = here::here("_targets"))
-tbl <- background_table(mmzame_background)
-descriptive_table <- tbl |> gt::gt() |> 
+tar_load(background)
+descriptive_table <- background |> gt::gt() |> 
   tab_spanner(label = "Statistics", columns=c(mean,sd)) |>
   tab_spanner(label = "Non-response ($n$)", columns=n_missing) |> 
   fmt_number(

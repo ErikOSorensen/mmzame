@@ -11,7 +11,7 @@
 
 <meta name="author" content="Erik Ø. Sørensen" />
 
-<meta name="date" content="2024-08-11" />
+<meta name="date" content="2025-04-25" />
 
 <title>Background table</title>
 
@@ -352,14 +352,13 @@ display: none;
 
 <h1 class="title toc-ignore">Background table</h1>
 <h4 class="author">Erik Ø. Sørensen</h4>
-<h4 class="date">2024-08-11</h4>
+<h4 class="date">2025-04-25</h4>
 
 </div>
 
 
-<pre class="r"><code>tar_load(mmzame_background,  store = here::here(&quot;_targets&quot;))
-tbl &lt;- background_table(mmzame_background)
-descriptive_table &lt;- tbl |&gt; gt::gt() |&gt; 
+<pre class="r"><code>tar_load(background)
+descriptive_table &lt;- background |&gt; gt::gt() |&gt; 
   tab_spanner(label = &quot;Statistics&quot;, columns=c(mean,sd)) |&gt;
   tab_spanner(label = &quot;Non-response ($n$)&quot;, columns=n_missing) |&gt; 
   fmt_number(

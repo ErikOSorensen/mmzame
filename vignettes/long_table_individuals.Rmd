@@ -255,9 +255,5 @@ classifications <- all |>
   data.frame() 
 intersections <- UpSetR::upset(classifications, order.by="freq") 
 intersections
-
-pdf(file = here::here("graphs","impartial_definition_intersections.pdf"), onefile=FALSE, width = 6.3, height = 3.93)
-print(intersections)
-dev.off()
 ```
 

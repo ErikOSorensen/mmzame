@@ -7,4 +7,5 @@ _targets/
 .local/
 .cache/
 .bash*
+logs/
 mmzame_graphs.zip

@@ -26,11 +26,11 @@ these errors.
 The master file this replication package will:
 
 1. Install the required versions of the necessary `R` packages from CRAN.
-2. Downloads the necessary datafile from Harvard Dataverse.
+2. Downloads the necessary datafiles from Harvard Dataverse.
 3. Create all the displays in the paper as separate files (documented below).
 4. Create markdown documents for numbers referenced in the paper but not explicitly part of produced tables.
 
-On a powerful desktop computer, the replicator should expect the code to run for about 6 hours.
+On a powerful desktop computer, the replicator should expect the code to run for about 12 hours.
 
 ## Data Availability
 
@@ -39,9 +39,18 @@ with documentation, have been deposited in the public domain at Harvard Datavers
 
 - Zame, William R.; Tungodden, Bertil; Sørensen, Erik Ø.; Kariv, Shachar; Cappelen, Alexander W., 2021, "Replication Data for: Linking Social and Personal Preferences: Theory and Experiment", https://doi.org/10.7910/DVN/LUF59R, Harvard Dataverse, V2.
 
-We certify that the author(s) of the manuscript have legitimate access to and permission to use the data used in this manuscript, and the data are licensed under a Creative Commons/CC0 license. See [LICENSE_CC0.txt](LICENSE_CC0.txt) for details.
+We certify that the author(s) of the manuscript have legitimate access to and permission to 
+use the data used in this manuscript, and the data are licensed under a Creative Commons/CC0 license. 
+See [LICENSE_CC0.txt](LICENSE_CC0.txt) for details.
 
 The data file is downloaded when the `targets` plan is first run.
+
+The files available (and automatically downloaded from Harvard Dataverse and put in a a cached "target") are: 
+
+| Filename | Content |
+|----------|---------|
+| mmzame_decisions.tab | Decisions for each individual.  |
+| mmzame_background.tab | Short survey of participant demographics. |
 
 
 ## Computational requirements
@@ -50,11 +59,15 @@ The data file is downloaded when the `targets` plan is first run.
 ### Software Requirements
 
 
-- `R` (code was last run with version 4.1.2)
-- `renv` (0.14.0)
-    - system `curl` is a dependency of `renv`, should come with Windows 10 and Mac OSX, easily installable on linux.
-- The libraries and versions specified by the `renv.lock` file will be installed into a project specific library when the master file is run.
-- `rmarkdown` will require system `pandoc`, which is easiest installed with `Rstudio`.
+- `R`, the code was last run with version 4.5.
+  - `renv`, the code was last run with version 1.1.4 (system `curl` is a dependency of `renv`, should come with Windows 10 and Mac OSX, easily installable on linux).
+  - Other libraries and dependencies specified in the `renv.lock` file will be installed into a project specific library when the master file is run.
+  - `rmarkdown` will require system `pandoc`, which is easiest installed with `Rstudio`.
+- The `run_pipeline.sh` script uses `bash` scripting, which may   require Linux.
+
+### Controlled randomness
+
+Random seed is set in `_targets.R`, line 36.
 
 
 ### Memory and Runtime Requirements
@@ -64,7 +77,7 @@ The code was last run on a Ubuntu 20.04.3 system, on a VMWare virtual desktop ru
 Memory requirements are limited, at around 200 MB per worker node. 
 Disk use is very limited (at less than 0.5GB).
 
-Approximate time needed to reproduce all the analyses on a desktop machine (2023) is about 18 hours.
+Approximate time needed to reproduce all the analyses on a desktop machine (2025) is about 12 hours.
 
 
 With a less powerful system, it would be good to adjust the following line in `main.R`:
@@ -74,24 +87,33 @@ tar_make_future(workers = 26)
 ```
 
 The number of workers should not be larger than the number of threads the computer can comfortably run in parallel. 
-There are 16 long running worker nodes. 
+There are 20 long running worker nodes. 
 Parallelization is handled by Henrik Bengtsson's `future` library. 
-The full potential efficiency gains from parallelization are not achieved, ordinary 
+The full potential efficiency gains from parallelization are not achieved, but ordinary 
 desktop computers will be fully occupied.
 
 
 
 ## Description of programs/code
 
-- `main.R`: Top level script to run and generate all outputs.
+- `run_pipeline.sh`: Top level shell script. Runs all code and write logs.
+- `main.R`: Top level R code to run and generate all outputs.
 - `_targets.R`: Specification of DAG for creating all outputs using Will Landau's `targets` package.
 - `functions.R`: Function definitions called by the targets defined in `_targets.R`.
 - `renv.lock`: Specification of necessary libraries (and version) for running the code.
 - `.Rprofile`: Ensures that `renv` loads local libraries.
 
 
-The graphical displays are produced in the `graphs/` directory (as pdf-files).
+The graphical displays are produced in the `graphs/` directory (as .pdf-files).
+The tabular displays are produced in the `tables/` directory (as .tex-files, some of which are edited for visual display to be part of the paper.
 The other numbers and descriptions produced are part of the vignettes that are rendered in the `vignettes/` directory.
+
+The code is organized such that the `_targets.R` specifies all computationally intensive
+outputs, with special targets ("vignettes") to create human readable output using markdown. 
+The display items (tables and graphs) are produced as side-effects of the vignettes: The vignettes
+loads the calculated targets and writes .pdf and .tex files to disk in accordance with
+the table below.
+
 
 ### License for Code
 
@@ -99,22 +121,28 @@ The code is licensed under a BSD-3-Clause license. See [LICENSE_BSD-3-Clause.txt
 
 ## Instructions to Replicators
 
-From the command line, the replicator should run the `main.R` script:
+On a linux computer, from the command line, the replicator should run the top script
 
 ```
-Rscript main.R
+bash run_pipeline.sh
 ```
+
+This will run the `main.R` script in the background, which will automate the creation
+of all results.
 
 The first time it is run, this will install a local library of R packages from CRAN, 
 download the data from Harvard Dataverse, and build all the targets specified in `_targets.R` 
 (a specification of a directed acyclic graph of dependencies for generating all
-necessary displays and descriptions). 
+necessary displays and descriptions). Running the script for the first time, the replicatior should 
+expect a substantial chain of dependencies to be installed on the local computer, 
+dependending on compute power and internet connection, this migth take an hour +/-.
 
 The `targets` system is smart about
 caching intermediate results, so while running `main.R` takes a considerable amount of 
 time for the first run, minor adjustments to the output routines in the vignettes are 
 do not require the heavy computations to be re-run, and running `main.R` for the second
-time is almost free of costs with respect to changes in the display layer. 
+time is almost free of costs with respect to changes in the display layer if the `tar_destroy()` line
+in the `main.R` file is commented out.. 
 
 
 ## List of tables and programs
@@ -134,11 +162,11 @@ to run the `main.R` script to generate the displays.
 | Table 2B         |  vignettes/testing_theory.Rmd           | 208       | tables/power_B.tex | |
 | Figure 1          | n.a. (no data)           |             |          Figures_1.pdf                 | (theoretical illustration)         |
 | Figure 2          | n.a. (no data)           |             |          Figures_2.pdf                        | (theoretical illustration)          |
-| Figure 3          |vignettes/aggregate_behavior.Rmd      |             | graphs/aggregate_choices.pdf       |       |
-| Figure 4          |vignettes/individual_behavior.Rmd |                | graphs/logprice_scatters.pdf | | 
-| Figure 5          |vignettes/testing_rationality.Rmd |                | graphs/empirical_cceis.pdf | |
-| Figure 6          |vignettes/testing_rationality.Rmd |                | graphs/empirical_cceis_and_Bronars.pdf  | |
-| Figure 7          |vignettes/testing_theory.Rmd      |                | graphs/prop3_permutations.pdf | | 
+| Figure 3          |vignettes/aggregate_behavior.Rmd      | 170             | graphs/aggregate_choices.pdf       |       |
+| Figure 4          |vignettes/individual_behavior.Rmd |    117            | graphs/logprice_scatters.pdf | | 
+| Figure 5          |vignettes/testing_rationality.Rmd |      99          | graphs/empirical_cceis.pdf | |
+| Figure 6          |vignettes/testing_rationality.Rmd |     150           | graphs/empirical_cceis_and_Bronars.pdf  | |
+| Figure 7          |vignettes/testing_theory.Rmd      |       82         | graphs/prop3_permutations.pdf | | 
 | Appendix Table 1  |  n.a. (no data)                  |                |                               | (theoretical illustration) |
 | Appendix Table 2 | vignettes/background_table.Rmd   | 52             | tables/TableA1.tex            |                            |
 | Appendix Table 3 | vignettes/long_table_individuals.Rmd | 236        | tables/main_tableC.tex        |                            | 

@@ -36,6 +36,8 @@ DATA_SERVER = "dataverse.harvard.edu"
 tar_option_set(seed = 341246134)
 
 list(
+  # Comment on naming of targets: The "propX" naming should not be 
+  # read as refererring to numbered propositions in the paper.
   tar_target(mmzame_decisions_alltreatments, 
              dataverse::get_dataframe_by_id(DATA_FILE_ID, 
                                             .f = readr::read_tsv, 

@@ -155,7 +155,7 @@ there are dependencies (as described in `_targets.R`) such that it is always saf
 to run the `main.R` script to generate the displays. 
 
 
-| Figure/Table #    | Program                  |Line Number | Display file name                      | Note                            |
+| Display Item    | Program                  |Line Number | Display file name                      | Note                            |
 |-------------------|--------------------------|-------------|----------------------------------|---------------------------------|
 | Table 1           |  vignettes/long_table_individuals.Rmd | 175          | tables/main_table.tex | |
 | Table 2A         |  vignettes/testing_theory.Rmd           |  187| tables/power_A.tex  | |

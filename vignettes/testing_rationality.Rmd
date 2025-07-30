@@ -96,7 +96,8 @@ ccei_bar_fractions %>% ggplot(aes(x=ccei_group, y=fraction, group=domain, fill=d
   theme(legend.title=element_blank()) + 
   scale_fill_grey() + 
   scale_y_continuous(limits=c(0,1), breaks=c(0,0.2,0.4,0.6,0.8,1.0))
-ggsave(here::here("graphs","empirical_cceis.pdf"), width=16, height = 10, units = "cm")
+ggsave(here::here("graphs","empirical_cceis.pdf"), width=16, height = 10, units = "cm", device=cairo_pdf)
+ggsave(here::here("graphs","empirical_cceis.eps"), width=16, height = 10, units = "cm", device=cairo_ps)
 ```
 
 
@@ -147,7 +148,8 @@ df %>% ggplot(aes(x=ccei_group, y=fraction, group=outcome, fill=outcome)) +
   theme(legend.title=element_blank()) + 
   scale_fill_grey() +
   scale_y_continuous(limits=c(0,1), breaks=c(0,0.2,0.4,0.6,0.8,1.0))
-ggsave(here::here("graphs", "empirical_cceis_and_Bronars.pdf"), width=16, height = 10, units="cm")
+ggsave(here::here("graphs", "empirical_cceis_and_Bronars.pdf"), width=16, height = 10, units="cm", device=cairo_pdf)
+ggsave(here::here("graphs", "empirical_cceis_and_Bronars.eps"), width=16, height = 10, units="cm", device=cairo_ps)
 ```
 
 ```{r}

@@ -80,8 +80,9 @@ p3D <- graph_list[[502]] + xlim(0.65,1) +
 p3_joint <- p3A + p3B + p3C + p3D + plot_annotation(tag_levels = 'A') 
 p3_joint
 ggsave(here::here("graphs","prop3_permutations.pdf"), plot=p3_joint, 
-       width=7.29, height = 4.5, units="in")
-#embed_fonts(here::here("graphs","prop3_permutations.pdf"))
+       width=16, height = 12, units="in", device=cairo_pdf)
+ggsave(here::here("graphs","prop3_permutations.eps"), plot=p3_joint, 
+       width=16, height = 12, units="in", device=cairo_ps)
 ```
 
 What are the numbers?

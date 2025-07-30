@@ -151,7 +151,9 @@ The provided code reproduces all numbers provided in text in the paper.
 The table below indicates where and how the displays are produced.
 Note that while the point at which displays are save is recorded in the table below,
 there are dependencies (as described in `_targets.R`) such that it is always safest 
-to run the `main.R` script to generate the displays. 
+to run the `main.R` script to generate the displays. While .pdf figures are listed
+in the table below, the same figures are also exported as .eps figures (with the same
+basename).
 
 
 | Display Item    | Program                  |Line Number | Display file name                      | Note                            |
@@ -164,7 +166,7 @@ to run the `main.R` script to generate the displays.
 | Figure 3          |vignettes/aggregate_behavior.Rmd      | 170             | graphs/aggregate_choices.pdf       |       |
 | Figure 4          |vignettes/individual_behavior.Rmd |    117            | graphs/logprice_scatters.pdf | | 
 | Figure 5          |vignettes/testing_rationality.Rmd |      99          | graphs/empirical_cceis.pdf | |
-| Figure 6          |vignettes/testing_rationality.Rmd |     150           | graphs/empirical_cceis_and_Bronars.pdf  | |
+| Figure 6          |vignettes/testing_rationality.Rmd |     151           | graphs/empirical_cceis_and_Bronars.pdf  | |
 | Figure 7          |vignettes/testing_theory.Rmd      |       82         | graphs/prop3_permutations.pdf | | 
 | Appendix Table 1  |  n.a. (no data)                  |                |                               | (theoretical illustration) |
 | Appendix Table 2 | vignettes/background_table.Rmd   | 52             | tables/TableA1.tex            |                            |

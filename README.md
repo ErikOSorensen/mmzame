@@ -45,12 +45,15 @@ See [LICENSE_CC0.txt](LICENSE_CC0.txt) for details.
 
 The data file is downloaded when the `targets` plan is first run.
 
-The files available (and automatically downloaded from Harvard Dataverse and put in a a cached "target") are: 
+The files available (and automatically downloaded from Harvard Dataverse and put in a a cached "target") are:
 
 | Filename | Content |
 |----------|---------|
 | mmzame_decisions.tab | Decisions for each individual.  |
 | mmzame_background.tab | Short survey of participant demographics. |
+
+For reference, copies of the data, in Stata format, and with pdf codebooks are available 
+in the `data_and_documentation` subdirectory of the replication package.
 
 
 ## Computational requirements
@@ -73,9 +76,9 @@ Random seed is set in `_targets.R`, line 36.
 ### Memory and Runtime Requirements
 
 
-The code was last run on a Ubuntu 20.04.6 system, on a VMWare virtual desktop running on top of AMD EPYC 7543P 32-Core Processor. 
-Memory requirements are limited, at around 200 MB per worker node. 
-Disk use is very limited (at less than 0.5GB). Approximate time needed to 
+The code was last run on a Ubuntu 20.04.6 system, on a VMWare virtual desktop running on top of AMD EPYC 7543P 32-Core Processor.
+Memory requirements are limited, at around 200 MB per worker node.
+Disk use is very limited (at less than 0.5GB). Approximate time needed to
 reproduce all the analyses on this machine is about 12 hours.
 
 
@@ -88,7 +91,7 @@ tar_make_future(workers = 26)
 The number of workers should not be larger than the number of threads the computer can comfortably run in parallel. 
 There are 20 long running worker nodes. 
 Parallelization is handled by Henrik Bengtsson's `future` library. 
-The full potential efficiency gains from parallelization are not achieved, but ordinary 
+The full potential efficiency gains from parallelization are not achieved, but ordinary
 desktop computers will be fully occupied.
 
 
